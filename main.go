@@ -1,8 +1,9 @@
 package main
 
 import (
-	"marketing/item_manager/util/conf"
-	"marketing/item_manager/util/log"
+	"marketing/database/rds"
+	"marketing/util/conf"
+	"marketing/util/log"
 
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
@@ -10,6 +11,7 @@ import (
 func main() {
 	conf.InitConf()
 	log.SetLogger()
+	rds.InitMySQL()
 
 	h := server.Default()
 	register(h)

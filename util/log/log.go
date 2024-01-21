@@ -2,10 +2,12 @@ package log
 
 import (
 	"log"
-	consts "marketing/item_manager/const/conf"
-	"marketing/item_manager/util/conf"
+	consts "marketing/const/conf"
+	"marketing/util/conf"
 	"os"
 	"strings"
+
+	"github.com/bytedance/sonic"
 )
 
 var logger *log.Logger
@@ -23,14 +25,14 @@ func SetLogger() {
 	logger = log.New(f, "AppLog ", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
-func Info(event string, kvs ...string) {
+func Info(event string, kvs ...interface{}) {
 	sB := &strings.Builder{}
 	sB.WriteString("[INFO] ")
 	writeKVs(sB, kvs...)
 	logger.Printf(sB.String())
 }
 
-func Error(event string, err error, kvs ...string) {
+func Error(event string, err error, kvs ...interface{}) {
 	sB := &strings.Builder{}
 	sB.WriteString("[ERROR] error=")
 	sB.WriteString(err.Error())
@@ -39,21 +41,33 @@ func Error(event string, err error, kvs ...string) {
 	logger.Printf(sB.String())
 }
 
-func Warn(event string, kvs ...string) {
+func Warn(event string, kvs ...interface{}) {
 	sB := &strings.Builder{}
 	sB.WriteString("[WARN] ")
 	writeKVs(sB, kvs...)
 	logger.Printf(sB.String())
 }
 
-func writeKVs(sB *strings.Builder, kvs ...string) {
+func writeKVs(sB *strings.Builder, kvs ...interface{}) {
 	if len(kvs)%2 == 1 {
 		kvs = append(kvs, "")
 	}
 	for i := 0; i < len(kvs); i += 2 {
-		sB.WriteString(kvs[i])
+		sB.WriteString(formatInterface(kvs[i]))
 		sB.WriteString("=")
-		sB.WriteString(kvs[i+1])
+		sB.WriteString(formatInterface(kvs[i+1]))
 		sB.WriteString(" ")
+	}
+}
+
+func formatInterface(v interface{}) string {
+	switch v := v.(type) {
+	case string:
+		return v
+	case error:
+		return v.Error()
+	default:
+		s, _ := sonic.MarshalString(v)
+		return s
 	}
 }

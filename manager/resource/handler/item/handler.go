@@ -2,7 +2,7 @@ package item
 
 import (
 	"context"
-	"marketing/item_manager/util/log"
+	"marketing/util/log"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
