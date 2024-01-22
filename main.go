@@ -9,9 +9,9 @@ import (
 )
 
 func main() {
-	conf.InitConf()
-	log.SetLogger()
-	rds.InitMySQL()
+	conf.Init()
+	log.Init()
+	rds.Init()
 
 	h := server.Default()
 	register(h)

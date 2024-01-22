@@ -1,29 +1,20 @@
 package resource
 
 import (
-	"marketing/const/auth"
-	"marketing/const/errs"
+	"marketing/consts/auth"
+	"marketing/consts/errs"
 
 	"github.com/pkg/errors"
 )
 
 type QueryReq struct {
-	AppId   uint          `form:"app_id"`
-	ResType *auth.ResType `form:"res_type"`
-	ResId   string        `form:"res_id"`
+	ResType   *auth.ResType  `form:"res_type"`
+	ResId     *string        `form:"res_id"`
+	AuthType  *auth.AuthType `form:"auth_type"`
+	CreatedBy *string        `form:"created_by"`
 }
 
 func (r *QueryReq) Validate() error {
-	if r.AppId == 0 {
-		return errors.WithMessage(errs.InvalidParams, "app_id is required")
-	}
-	if r.ResType == nil {
-		return nil
-	}
-	if r.ResId == "" {
-		return errors.WithMessage(errs.InvalidParams, "res_id is required")
-	}
-
 	return nil
 }
 

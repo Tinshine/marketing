@@ -13,16 +13,20 @@ func Query(ctx context.Context, rq *model.QueryReq) (*model.QueryResp, error) {
 	if err := rq.Validate(); err != nil {
 		return nil, errors.WithMessage(err, "validate")
 	}
+
 	db := rds.GetDB(ctx).Model(model.AuthRes{})
-	db = db.Where("app_id = ?", rq.AppId)
 	if rq.ResType != nil {
-		db = db.Where("res_type = ? and res_id = ?", *rq.ResType, rq.ResId)
+		db = db.Where("res_type = ?", *rq.ResType)
 	}
-	username, err := util.GetUsername(ctx)
-	if err != nil {
-		return nil, errors.WithMessage(err, "get username")
+	if rq.ResId != nil {
+		db = db.Where("res_id = ?", *rq.ResId)
 	}
-	db = db.Where("created_by = ?", username)
+	if rq.AuthType != nil {
+		db = db.Where("auth_type = ?", *rq.AuthType)
+	}
+	if rq.CreatedBy != nil {
+		db = db.Where("created_by = ?", *rq.CreatedBy)
+	}
 
 	var records []*model.AuthRes
 	if err := db.Find(&records).Error; err != nil {

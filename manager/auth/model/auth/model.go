@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"marketing/const/auth"
-	"marketing/const/errs"
+	"marketing/consts/auth"
+	"marketing/consts/errs"
 
 	"github.com/pkg/errors"
 )

@@ -2,17 +2,20 @@ package log
 
 import (
 	"log"
-	consts "marketing/const/conf"
+	consts "marketing/consts/conf"
 	"marketing/util/conf"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/bytedance/sonic"
 )
 
 var logger *log.Logger
 
-func SetLogger() {
+var Init = sync.OnceFunc(setLogger)
+
+func setLogger() {
 	fileName, err := conf.GetConf(consts.LogDirConfKey)
 	if err != nil {
 		panic(err)

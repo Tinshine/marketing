@@ -2,7 +2,7 @@ package resource
 
 import (
 	"context"
-	"marketing/const/errs"
+	"marketing/consts/errs"
 	model "marketing/manager/auth/model/resource"
 	service "marketing/manager/auth/service/resource"
 	"marketing/util"

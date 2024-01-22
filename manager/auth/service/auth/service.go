@@ -2,8 +2,8 @@ package auth
 
 import (
 	"context"
-	"marketing/const/auth"
-	"marketing/const/errs"
+	"marketing/consts/auth"
+	"marketing/consts/errs"
 	"marketing/database/rds"
 	model "marketing/manager/auth/model/auth"
 	"marketing/util"

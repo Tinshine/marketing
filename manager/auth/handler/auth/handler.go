@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 
-	"marketing/const/errs"
+	"marketing/consts/errs"
 	model "marketing/manager/auth/model/auth"
 	service "marketing/manager/auth/service/auth"
 	"marketing/util"

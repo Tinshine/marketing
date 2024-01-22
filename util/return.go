@@ -2,7 +2,7 @@ package util
 
 import (
 	"errors"
-	"marketing/const/errs"
+	"marketing/consts/errs"
 	"net/http"
 
 	"github.com/cloudwego/hertz/pkg/app"

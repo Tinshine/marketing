@@ -3,8 +3,9 @@ package rds
 import (
 	"context"
 	"fmt"
-	consts "marketing/const/conf"
+	consts "marketing/consts/conf"
 	"marketing/util/conf"
+	"sync"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -12,7 +13,9 @@ import (
 
 var db *gorm.DB
 
-func InitMySQL() {
+var Init = sync.OnceFunc(setDB)
+
+func setDB() {
 	usr, err := conf.GetConf(consts.MySQLConfUserKey)
 	if err != nil {
 		panic(err)
