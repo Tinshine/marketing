@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"marketing/manager/auth/handler/auth"
 	"marketing/manager/auth/handler/resource"
 	"marketing/manager/resource/handler/item"
 
@@ -16,6 +17,7 @@ func register(h *server.Hertz) {
 	})
 
 	registerAuthResource(h)
+	registerAuth(h)
 	registerItem(h)
 }
 
@@ -27,4 +29,11 @@ func registerAuthResource(h *server.Hertz) {
 	h.GET("/auth/resource/query", resource.Query)
 	h.DELETE("/auth/resource/delete", resource.Delete)
 	h.POST("/auth/resource/add", resource.Add)
+}
+
+func registerAuth(h *server.Hertz) {
+	h.GET("/auth/query", auth.Query)
+	h.DELETE("/auth/delete", auth.Delete)
+	h.POST("/auth/add", auth.Add)
+	h.GET("/auth/check", auth.Check)
 }
