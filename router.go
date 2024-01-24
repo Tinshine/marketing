@@ -42,4 +42,7 @@ func registerAuth(h *server.Hertz) {
 
 func registerItem(g *route.RouterGroup) {
 	g.GET("/item/query", middleware.AuthCheck(authConst.ResourceItem, authConst.Query), item.Query)
+	g.POST("/item/add", middleware.AuthCheck(authConst.ResourceItem, authConst.Add), item.Add)
+	g.DELETE("/item/delete", middleware.AuthCheck(authConst.ResourceItem, authConst.Delete), item.Delete)
+	g.PUT("/item/update", middleware.AuthCheck(authConst.ResourceItem, authConst.Update), item.Update)
 }
