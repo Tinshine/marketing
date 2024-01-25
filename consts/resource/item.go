@@ -12,11 +12,11 @@ const (
 	Currency ItemType = iota // virtual currency
 	Credit
 	CDKey
-	Unknown
+	UnknownItemType
 )
 
 func (t ItemType) Validate() error {
-	if t < Currency || t >= Unknown {
+	if t < Currency || t >= UnknownItemType {
 		return errors.WithMessage(errs.InvalidParams, "unsupported item type")
 	}
 	return nil

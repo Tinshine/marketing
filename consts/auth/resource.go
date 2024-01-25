@@ -8,6 +8,7 @@ type ResType int
 
 const (
 	ResourceItem ResType = iota
+	ResourceGift
 	UnknownResType
 )
 

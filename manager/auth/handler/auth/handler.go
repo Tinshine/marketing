@@ -16,6 +16,7 @@ import (
 func Query(c context.Context, ctx *app.RequestContext) {
 	req := new(model.QueryReq)
 	if err := ctx.Bind(&req); err != nil {
+		log.Error("Query.Bind", err)
 		util.Error(ctx, errors.WithMessage(errs.Bind, err.Error()))
 		return
 	}
