@@ -2,7 +2,8 @@ package log
 
 import (
 	"log"
-	consts "marketing/consts/conf"
+	"marketing/consts"
+	confConst "marketing/consts/conf"
 	"marketing/util/conf"
 	"os"
 	"strings"
@@ -16,7 +17,7 @@ var logger *log.Logger
 var Init = sync.OnceFunc(setLogger)
 
 func setLogger() {
-	fileName, err := conf.GetConf(consts.LogDirConfKey)
+	fileName, err := conf.GetConf(consts.Test, confConst.LogDirConfKey)
 	if err != nil {
 		panic(err)
 	}

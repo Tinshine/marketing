@@ -55,6 +55,8 @@ func registerItem(g *route.RouterGroup) {
 func registerGift(g *route.RouterGroup) {
 	g.GET("/gift/query", middleware.AuthCheck(authConst.ResourceGift, authConst.Query), gift.Query)
 	g.POST("/gift/add", middleware.AuthCheck(authConst.ResourceGift, authConst.Add), gift.Add)
+	g.PUT("/gift/update", middleware.AuthCheck(authConst.ResourceGift, authConst.Update), gift.Update)
+	g.POST("/gift/sync", middleware.AuthCheck(authConst.ResourceGift, authConst.Sync), gift.Sync)
+	// g.POST("/gift/release", middleware.AuthCheck(authConst.ResourceGift, authConst.Release, gift.Release)
 	// g.DELETE("/gift/delete", middleware.AuthCheck(authConst.ResourceGift, authConst.Delete), gift.Delete)
-	// g.PUT("/gift/update", middleware.AuthCheck(authConst.ResourceGift, authConst.Update), gift.Update)
 }

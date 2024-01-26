@@ -12,7 +12,7 @@ import (
 
 func FindById(ctx context.Context, id int) (*Item, error) {
 	var item Item
-	if err := rds.GetDB(ctx).First(&item, id).Error; err != nil {
+	if err := rds.TestDB(ctx).First(&item, id).Error; err != nil {
 		return nil, errors.WithMessage(err, "db first")
 	}
 	return &item, nil
@@ -20,7 +20,7 @@ func FindById(ctx context.Context, id int) (*Item, error) {
 
 func FindByItemId(ctx context.Context, appId uint, itemId int) (*Item, error) {
 	var items []*Item
-	if err := rds.GetDB(ctx).Where("app_id = ? and item_id = ?", appId, itemId).
+	if err := rds.TestDB(ctx).Where("app_id = ? and item_id = ?", appId, itemId).
 		Find(&items).Error; err != nil {
 		return nil, errors.WithMessage(err, "db find")
 	}
@@ -35,7 +35,7 @@ func FindByItemId(ctx context.Context, appId uint, itemId int) (*Item, error) {
 
 func FindByAppId(ctx context.Context, appId uint) ([]*Item, error) {
 	var items []*Item
-	if err := rds.GetDB(ctx).Where("app_id = ?", appId).
+	if err := rds.TestDB(ctx).Where("app_id = ?", appId).
 		Find(&items).Error; err != nil {
 		return nil, errors.WithMessage(err, "db find")
 	}
@@ -44,7 +44,7 @@ func FindByAppId(ctx context.Context, appId uint) ([]*Item, error) {
 
 func FirstOrInit(ctx context.Context, rq *AddReq, creator string) (*Item, error) {
 	item := new(Item)
-	if err := rds.GetDB(ctx).Transaction(func(tx *gorm.DB) error {
+	if err := rds.TestDB(ctx).Transaction(func(tx *gorm.DB) error {
 		exist, err := itemExist(tx, rq.AppId, rq.ItemId)
 		if err != nil {
 			return errors.WithMessage(err, "check item exist")
@@ -79,14 +79,14 @@ func itemExist(tx *gorm.DB, appId uint, itemId int) (bool, error) {
 }
 
 func DeleteById(ctx context.Context, id int) error {
-	if err := rds.GetDB(ctx).Delete(&Item{}, id).Error; err != nil {
+	if err := rds.TestDB(ctx).Delete(&Item{}, id).Error; err != nil {
 		return errors.WithMessage(err, "db delete")
 	}
 	return nil
 }
 
 func UpdateById(ctx context.Context, id int, fields map[string]interface{}) error {
-	err := rds.GetDB(ctx).Transaction(func(tx *gorm.DB) error {
+	err := rds.TestDB(ctx).Transaction(func(tx *gorm.DB) error {
 		var item Item
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			First(&item, id).Error; err != nil {

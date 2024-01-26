@@ -175,3 +175,36 @@ func (a *AddReq) ToModel(username string) (*Gift, error) {
 type AddResp struct {
 	Id int `json:"id"`
 }
+
+type UpdateReq struct {
+	Id          int            `json:"id"`
+	GiftName    *string        `json:"gift_name"`
+	LotteryRate *LotteryRate   `json:"lottery_rate"`
+	Items       *[]*ItemConfig `json:"items"`
+	Emails      *EmailConfigs  `json:"emails"`
+}
+
+func (a *UpdateReq) Validate() error {
+	if a.Id == 0 {
+		return errors.WithMessage(errs.InvalidParams, "id is required")
+	}
+	if a.LotteryRate != nil {
+		giftType, err := FindGiftTypeById(a.Id)
+		if err != nil {
+			return errors.WithMessage(err, "find gift_type by id")
+		}
+		if giftType != resource.Lottery {
+			return errors.WithMessage(errs.InvalidParams, "only lottery gift can update lottery_rate")
+		}
+	}
+	return nil
+}
+
+type SyncReq struct {
+	// todo...
+}
+
+type SyncResp struct {
+	OnlineId string `json:"online_id"`
+	// todo... query handler should support query online
+}

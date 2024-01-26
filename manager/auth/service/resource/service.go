@@ -14,7 +14,7 @@ func Query(ctx context.Context, rq *model.QueryReq) (*model.QueryResp, error) {
 		return nil, errors.WithMessage(err, "validate")
 	}
 
-	db := rds.GetDB(ctx).Model(model.AuthRes{})
+	db := rds.TestDB(ctx).Model(model.AuthRes{})
 	if rq.ResType != nil {
 		db = db.Where("res_type = ?", *rq.ResType)
 	}
@@ -48,7 +48,7 @@ func Delete(ctx context.Context, rq *model.DeleteReq) error {
 	if err := rq.Validate(); err != nil {
 		return errors.WithMessage(err, "validate")
 	}
-	if err := rds.GetDB(ctx).Delete(model.AuthRes{}, rq.Id).Error; err != nil {
+	if err := rds.TestDB(ctx).Delete(model.AuthRes{}, rq.Id).Error; err != nil {
 		return errors.WithMessage(err, "db delete")
 	}
 
@@ -70,7 +70,7 @@ func Add(ctx context.Context, rq *model.AddReq) (*model.AddResp, error) {
 	authRes.AuthType = rq.AuthType
 	authRes.CreatedBy = username
 
-	if err := rds.GetDB(ctx).Create(&authRes).Error; err != nil {
+	if err := rds.TestDB(ctx).Create(&authRes).Error; err != nil {
 		return nil, errors.WithMessage(err, "db create")
 	}
 

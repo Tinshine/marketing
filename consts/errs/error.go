@@ -10,4 +10,6 @@ var (
 	ItemNotFound     = newErr(-6, "Item not found")
 	DuplicateItem    = newErr(-7, "Duplicate item")
 	NoDeliveryClient = newErr(-8, "No delivery client available")
+	ConfNotFound     = newErr(-9, "Conf not found")
+	COnfEnvNotExist  = newErr(-10, "Conf env not exist")
 )

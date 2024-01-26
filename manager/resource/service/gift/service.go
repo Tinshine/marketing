@@ -66,10 +66,47 @@ func Add(ctx context.Context, rq *model.AddReq) (*model.AddResp, error) {
 		return nil, errors.WithMessage(err, "to model")
 	}
 
-	if err := rds.GetDB(ctx).Create(&gift).Error; err != nil {
+	if err := rds.TestDB(ctx).Create(&gift).Error; err != nil {
 		return nil, errors.WithMessage(err, "create")
 	}
 	resp := new(model.AddResp)
 	resp.Id = gift.Id
 	return resp, nil
+}
+
+func Update(ctx context.Context, rq *model.UpdateReq) error {
+	if err := rq.Validate(); err != nil {
+		return errors.WithMessage(err, "validate")
+	}
+
+	username, err := util.GetUsername(ctx)
+	if err != nil {
+		return errors.WithMessage(err, "get username")
+	}
+
+	fields := map[string]interface{}{
+		"updated_by": username,
+	}
+	if rq.Emails != nil {
+		fields["emails"] = rq.Emails
+	}
+	if rq.GiftName != nil {
+		fields["gift_name"] = rq.GiftName
+	}
+	if rq.Items != nil {
+		fields["items"] = rq.Items
+	}
+	if rq.LotteryRate != nil {
+		fields["lottery_rate"] = rq.LotteryRate
+	}
+
+	if err := model.UpdateById(ctx, rq.Id, fields); err != nil {
+		return errors.WithMessage(err, "update by id")
+	}
+	return nil
+}
+
+func Sync(ctx context.Context, rq *model.SyncReq) (*model.SyncResp, error) {
+	// todo...
+	return nil, nil
 }

@@ -23,7 +23,7 @@ func Query(ctx context.Context, rq *model.QueryReq) (*model.QueryResp, error) {
 		return nil, errors.WithMessage(err, "get username")
 	}
 
-	db := rds.GetDB(ctx).Model(&model.Auth{})
+	db := rds.TestDB(ctx).Model(&model.Auth{})
 	db = db.Where("app_id = ? and username = ?", rq.AppId, username)
 	if rq.AuthResId != 0 {
 		db = db.Where("auth_res_id = ?", rq.AuthResId)
@@ -47,7 +47,7 @@ func Delete(ctx context.Context, rq *model.DeleteReq) error {
 		return errors.WithMessage(err, "validate")
 	}
 
-	if err := rds.GetDB(ctx).Delete(&model.Auth{}, rq.Id).Error; err != nil {
+	if err := rds.TestDB(ctx).Delete(&model.Auth{}, rq.Id).Error; err != nil {
 		return errors.WithMessage(err, "db delete")
 	}
 
@@ -71,7 +71,7 @@ func Add(ctx context.Context, rq *model.AddReq) (*model.AddResp, error) {
 		CreatedBy: grantor,
 		ExpiredAt: rq.ExpiredAt,
 	}
-	if err := rds.GetDB(ctx).Create(&record).Error; err != nil {
+	if err := rds.TestDB(ctx).Create(&record).Error; err != nil {
 		return nil, errors.WithMessage(err, "db create")
 	}
 
@@ -86,7 +86,7 @@ func Check(ctx context.Context, rq *model.CheckReq) (*model.CheckResp, error) {
 	}
 
 	var records []*model.Auth
-	if err := rds.GetDB(ctx).Model(&model.Auth{}).
+	if err := rds.TestDB(ctx).Model(&model.Auth{}).
 		Where("app_id = ? and username = ? and auth_res_id = ?",
 			rq.AppId, rq.Username, rq.AuthResId).Find(&records).Error; err != nil {
 		return nil, errors.WithMessage(err, "db find")

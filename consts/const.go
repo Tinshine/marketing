@@ -8,3 +8,11 @@ const (
 	StateOnline
 	StateOffline
 )
+
+type Env int
+
+const (
+	Dev Env = iota
+	Test
+	Prod
+)

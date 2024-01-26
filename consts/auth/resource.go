@@ -26,6 +26,8 @@ const (
 	Add
 	Update
 	Delete
+	Sync
+	Release
 	UnknownAuthType
 )
 
