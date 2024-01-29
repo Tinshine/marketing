@@ -10,9 +10,17 @@ import (
 )
 
 type QueryReq struct {
-	Id      *int  `json:"id"`
-	AppId   uint  `json:"app_id"`
-	GroupId *uint `json:"group_id"`
+	Id      *int       `json:"id"`
+	AppId   uint       `json:"app_id"`
+	GroupId *uint      `json:"group_id"`
+	Env     consts.Env `json:"env"`
+}
+
+func (q *QueryReq) Validate() error {
+	if q.Env != consts.Test && q.Env != consts.Prod {
+		return errors.WithMessage(errs.InvalidParams, "env is invalid")
+	}
+	return nil
 }
 
 type QueryResp struct {
@@ -34,7 +42,6 @@ type Gift struct {
 	Items       GiftItems           `json:"items" gorm:"column:items"`
 	Emails      GiftEmails          `json:"emails" gorm:"column:emails"`
 	State       consts.ReleaseState `json:"state" gorm:"column:state"`
-	FilterId    int                 `json:"filter_id" gorm:"column:filter_id"`
 	CreatedBy   string              `json:"created_by" gorm:"column:created_by"`
 	UpdatedBy   string              `json:"updated_by" gorm:"column:updated_by"`
 	CreatedAt   int64               `json:"created_at" gorm:"column:created_at"`
@@ -201,10 +208,42 @@ func (a *UpdateReq) Validate() error {
 }
 
 type SyncReq struct {
-	// todo...
+	Id uint `json:"id"`
 }
 
-type SyncResp struct {
-	OnlineId string `json:"online_id"`
-	// todo... query handler should support query online
+func (s *SyncReq) Validate() error {
+	if s.Id == 0 {
+		return errors.WithMessage(errs.InvalidParams, "id is required")
+	}
+	return nil
+}
+
+type DeleteReq struct {
+	Id  uint       `json:"id"`
+	Env consts.Env `json:"env"`
+}
+
+func (d *DeleteReq) Validate() error {
+	if d.Id == 0 {
+		return errors.WithMessage(errs.InvalidParams, "id is required")
+	}
+	if d.Env != consts.Test && d.Env != consts.Prod {
+		return errors.WithMessage(errs.InvalidParams, "env is invalid")
+	}
+	return nil
+}
+
+type ReleaseReq struct {
+	Id  uint       `json:"id"`
+	Env consts.Env `json:"env"`
+}
+
+func (d *ReleaseReq) Validate() error {
+	if d.Id == 0 {
+		return errors.WithMessage(errs.InvalidParams, "id is required")
+	}
+	if d.Env != consts.Test && d.Env != consts.Prod {
+		return errors.WithMessage(errs.InvalidParams, "env is invalid")
+	}
+	return nil
 }

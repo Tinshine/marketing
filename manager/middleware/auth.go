@@ -26,8 +26,8 @@ func AuthCheck(resType auth.ResType, authType auth.AuthType) app.HandlerFunc {
 		}
 
 		resp, err := resService.Query(ctx, &resModel.QueryReq{
-			ResType:  &resType,
-			AuthType: &authType,
+			ResType:   &resType,
+			AuthTypes: &[]auth.AuthType{authType, auth.Admin},
 		})
 		if err != nil {
 			log.Error("AuthCheck.Query", err)
@@ -42,6 +42,7 @@ func AuthCheck(resType auth.ResType, authType auth.AuthType) app.HandlerFunc {
 			return
 		}
 
+		reason := ""
 		for _, d := range resp.Data {
 			resp, err := authService.Check(ctx, &authModel.CheckReq{
 				AppId:     d.AppId,
@@ -54,15 +55,16 @@ func AuthCheck(resType auth.ResType, authType auth.AuthType) app.HandlerFunc {
 				c.Abort()
 				return
 			}
-			if !resp.Pass {
-				log.Error("AuthCheck.Check", errs.NoAuth, "reason", resp.Reason)
-				util.Error(c, errs.NoAuth)
-				c.Abort()
+			if resp.Pass {
+				c.Next(ctx)
 				return
 			}
+			reason += string(resp.Reason) + ","
 		}
 
-		c.Next(ctx)
+		log.Error("AuthCheck.Check", errs.NoAuth, "reason", reason)
+		util.Error(c, errs.NoAuth)
+		c.Abort()
 
 	}
 

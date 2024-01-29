@@ -28,6 +28,7 @@ const (
 	Delete
 	Sync
 	Release
+	Admin
 	UnknownAuthType
 )
 

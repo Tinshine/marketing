@@ -53,12 +53,12 @@ func Add(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	resp, err := service.Add(c, req)
+	err := service.Add(c, req)
 	if err != nil {
 		log.Error("Add.service.Add", err, "req", req)
 		util.Error(ctx, errors.WithMessage(errs.Internal, err.Error()))
 		return
 	}
 
-	util.JSON(ctx, resp)
+	util.JSON(ctx, nil)
 }

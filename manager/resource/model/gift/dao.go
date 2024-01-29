@@ -10,9 +10,9 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func FindById(ctx context.Context, id int) (*Gift, error) {
+func FindById(db *gorm.DB, id int) (*Gift, error) {
 	var gift Gift
-	if err := rds.TestDB(ctx).First(&gift, id).Error; err != nil {
+	if err := db.First(&gift, id).Error; err != nil {
 		return nil, errors.WithMessage(err, "db first")
 	}
 	return &gift, nil
@@ -27,26 +27,26 @@ func FindGiftTypeById(id int) (resource.GiftType, error) {
 	return giftType, nil
 }
 
-func FindByAppId(ctx context.Context, appId uint) ([]*Gift, error) {
+func FindByAppId(db *gorm.DB, appId uint) ([]*Gift, error) {
 	var gifts []*Gift
-	if err := rds.TestDB(ctx).Where("app_id = ?", appId).
+	if err := db.Where("app_id = ?", appId).
 		Find(&gifts).Error; err != nil {
 		return nil, errors.WithMessage(err, "db find")
 	}
 	return gifts, nil
 }
 
-func FindByGroupId(ctx context.Context, appId, groupId uint) ([]*Gift, error) {
+func FindByGroupId(db *gorm.DB, appId, groupId uint) ([]*Gift, error) {
 	var gifts []*Gift
-	if err := rds.TestDB(ctx).Where("app_id = ? and group_id = ?", appId, groupId).
+	if err := db.Where("app_id = ? and group_id = ?", appId, groupId).
 		Find(&gifts).Error; err != nil {
 		return nil, errors.WithMessage(err, "db find")
 	}
 	return gifts, nil
 }
 
-func UpdateById(ctx context.Context, id int, fields map[string]interface{}) error {
-	err := rds.TestDB(ctx).Transaction(func(tx *gorm.DB) error {
+func UpdateById(db *gorm.DB, id int, fields map[string]interface{}) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		var gift Gift
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			First(&gift, id).Error; err != nil {

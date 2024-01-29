@@ -2,6 +2,7 @@ package resource
 
 import (
 	"context"
+	"marketing/consts/auth"
 	"marketing/database/rds"
 	model "marketing/manager/auth/model/resource"
 	"marketing/util"
@@ -21,8 +22,8 @@ func Query(ctx context.Context, rq *model.QueryReq) (*model.QueryResp, error) {
 	if rq.ResId != nil {
 		db = db.Where("res_id = ?", *rq.ResId)
 	}
-	if rq.AuthType != nil {
-		db = db.Where("auth_type = ?", *rq.AuthType)
+	if rq.AuthTypes != nil {
+		db = db.Where("auth_type in ?", *rq.AuthTypes)
 	}
 	if rq.CreatedBy != nil {
 		db = db.Where("created_by = ?", *rq.CreatedBy)
@@ -55,26 +56,35 @@ func Delete(ctx context.Context, rq *model.DeleteReq) error {
 	return nil
 }
 
-func Add(ctx context.Context, rq *model.AddReq) (*model.AddResp, error) {
+func Add(ctx context.Context, rq *model.AddReq) error {
 	if err := rq.Validate(); err != nil {
-		return nil, errors.WithMessage(err, "validate")
+		return errors.WithMessage(err, "validate")
 	}
 	username, err := util.GetUsername(ctx)
 	if err != nil {
-		return nil, errors.WithMessage(err, "get username")
+		return errors.WithMessage(err, "get username")
 	}
-	authRes := new(model.AuthRes)
-	authRes.AppId = rq.AppId
-	authRes.ResType = rq.ResType
-	authRes.ResId = rq.ResId
-	authRes.AuthType = rq.AuthType
-	authRes.CreatedBy = username
+
+	// remove duplicated auth_type and add admin type
+	authTypes := map[auth.AuthType]struct{}{}
+	for _, a := range rq.AuthTypes {
+		authTypes[a] = struct{}{}
+	}
+	authTypes[auth.Admin] = struct{}{}
+
+	authRes := make([]model.AuthRes, 0, len(authTypes))
+	for a := range authTypes {
+		authRes = append(authRes, model.AuthRes{
+			AppId:     rq.AppId,
+			ResType:   rq.ResType,
+			ResId:     rq.ResId,
+			AuthType:  a,
+			CreatedBy: username,
+		})
+	}
 
 	if err := rds.TestDB(ctx).Create(&authRes).Error; err != nil {
-		return nil, errors.WithMessage(err, "db create")
+		return errors.WithMessage(err, "db create")
 	}
-
-	resp := new(model.AddResp)
-	resp.Id = authRes.Id
-	return resp, nil
+	return nil
 }

@@ -8,10 +8,10 @@ import (
 )
 
 type QueryReq struct {
-	ResType   *auth.ResType  `form:"res_type"`
-	ResId     *string        `form:"res_id"`
-	AuthType  *auth.AuthType `form:"auth_type"`
-	CreatedBy *string        `form:"created_by"`
+	ResType   *auth.ResType    `form:"res_type"`
+	ResId     *string          `form:"res_id"`
+	AuthTypes *[]auth.AuthType `form:"auth_types"`
+	CreatedBy *string          `form:"created_by"`
 }
 
 func (r *QueryReq) Validate() error {
@@ -72,10 +72,10 @@ func (r *DeleteReq) Validate() error {
 }
 
 type AddReq struct {
-	AppId    uint          `json:"app_id"`
-	ResType  auth.ResType  `json:"res_type"`
-	ResId    string        `json:"res_id"`
-	AuthType auth.AuthType `json:"auth_type"`
+	AppId     uint            `json:"app_id"`
+	ResType   auth.ResType    `json:"res_type"`
+	ResId     string          `json:"res_id"`
+	AuthTypes []auth.AuthType `json:"auth_types"`
 }
 
 func (r *AddReq) Validate() error {
@@ -88,12 +88,14 @@ func (r *AddReq) Validate() error {
 	if r.ResId == "" {
 		return errors.WithMessage(errs.InvalidParams, "res_id is required")
 	}
-	if err := r.AuthType.Validate(); err != nil {
-		return errors.WithMessage(errs.InvalidParams, "auth_type is invalid")
+	for _, typ := range r.AuthTypes {
+		if err := typ.Validate(); err != nil {
+			return errors.WithMessage(errs.InvalidParams, "auth_type is invalid")
+		}
 	}
 	return nil
 }
 
 type AddResp struct {
-	Id int `json:"id"`
+	Ids []int `json:"ids"`
 }

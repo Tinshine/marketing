@@ -4,7 +4,12 @@ import (
 	"context"
 	"marketing/util"
 	"marketing/util/log"
+	"strconv"
 
+	"marketing/consts/auth"
+	authConst "marketing/consts/auth"
+	"marketing/manager/auth/model/resource"
+	authService "marketing/manager/auth/service/resource"
 	model "marketing/manager/resource/model/item"
 	service "marketing/manager/resource/service/item"
 
@@ -40,6 +45,21 @@ func Add(c context.Context, ctx *app.RequestContext) {
 	resp, err := service.Add(c, req)
 	if err != nil {
 		log.Error("Add.service.Add", err, "req", req)
+		util.Error(ctx, err)
+		return
+	}
+
+	err = authService.Add(c, &resource.AddReq{
+		AppId:   req.AppId,
+		ResType: authConst.ResourceItem,
+		ResId:   strconv.Itoa(resp.Id),
+		AuthTypes: []auth.AuthType{
+			authConst.Query, authConst.Add,
+			authConst.Update, authConst.Delete,
+		},
+	})
+	if err != nil {
+		log.Error("Add.authService.Add", err, "req", req)
 		util.Error(ctx, err)
 		return
 	}
