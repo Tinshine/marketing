@@ -15,7 +15,7 @@ import (
 
 func Query(c context.Context, ctx *app.RequestContext) {
 	req := new(model.QueryReq)
-	if err := ctx.Bind(&req); err != nil {
+	if err := ctx.Bind(req); err != nil {
 		log.Error("Query.Bind", err)
 		util.Error(ctx, errors.WithMessage(errs.Bind, err.Error()))
 		return
@@ -33,7 +33,7 @@ func Query(c context.Context, ctx *app.RequestContext) {
 
 func Delete(c context.Context, ctx *app.RequestContext) {
 	req := new(model.DeleteReq)
-	if err := ctx.Bind(&req); err != nil {
+	if err := ctx.Bind(req); err != nil {
 		util.Error(ctx, errors.WithMessage(errs.Bind, err.Error()))
 		return
 	}
@@ -50,7 +50,7 @@ func Delete(c context.Context, ctx *app.RequestContext) {
 
 func Add(c context.Context, ctx *app.RequestContext) {
 	req := new(model.AddReq)
-	if err := ctx.Bind(&req); err != nil {
+	if err := ctx.Bind(req); err != nil {
 		util.Error(ctx, errors.WithMessage(errs.Bind, err.Error()))
 		return
 	}
@@ -67,7 +67,7 @@ func Add(c context.Context, ctx *app.RequestContext) {
 
 func Check(c context.Context, ctx *app.RequestContext) {
 	req := new(model.CheckReq)
-	if err := ctx.Bind(&req); err != nil {
+	if err := ctx.Bind(req); err != nil {
 		util.Error(ctx, errors.WithMessage(errs.Bind, err.Error()))
 		return
 	}

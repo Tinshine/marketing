@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	authConst "marketing/consts/auth"
+	"marketing/engine"
 	"marketing/manager/auth/handler/auth"
 	"marketing/manager/auth/handler/resource"
 	"marketing/manager/middleware"
 	"marketing/manager/resource/handler/gift"
 	"marketing/manager/resource/handler/item"
+	"marketing/util/limiter"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -19,6 +21,8 @@ func register(h *server.Hertz) {
 	h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
 		ctx.String(hConsts.StatusOK, "pong")
 	})
+
+	registerModules(h)
 
 	h.Use(middleware.SSO)
 
@@ -59,4 +63,14 @@ func registerGift(g *route.RouterGroup) {
 	g.POST("/gift/sync", middleware.AuthCheck(authConst.ResourceGift, authConst.Sync), gift.Sync)
 	g.POST("/gift/release", middleware.AuthCheck(authConst.ResourceGift, authConst.Release), gift.Release)
 	g.DELETE("/gift/delete", middleware.AuthCheck(authConst.ResourceGift, authConst.Delete), gift.Delete)
+}
+
+// modules
+
+func registerModules(h *server.Hertz) {
+	registerEngine(h.Group("/engine"))
+}
+
+func registerEngine(g *route.RouterGroup) {
+	g.POST("/:env/execute", limiter.RateLimiter, engine.Execute)
 }

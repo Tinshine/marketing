@@ -16,3 +16,11 @@ const (
 	Test
 	Prod
 )
+
+type LoginType int
+
+const (
+	Sdk LoginType = iota
+	Passport
+	Web
+)
