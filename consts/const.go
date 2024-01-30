@@ -24,3 +24,12 @@ const (
 	Passport
 	Web
 )
+
+type TransactionState int
+
+const (
+	StateTry TransactionState = iota
+	StateCancel
+	StateConfirm
+	StateRetry
+)
