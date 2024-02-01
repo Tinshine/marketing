@@ -1,8 +1,14 @@
 package engine
 
-type TaskType int
+type TrType int
 
 const (
-	TaskType_HTTP TaskType = iota
-	TaskType_RPC
+	Tr_HTTP TrType = iota
+	Tr_RPC
+	Tr_Local
+)
+
+const (
+	TaskId_DeductQuota uint = 1
+	TaskId_Reward      uint = 2
 )

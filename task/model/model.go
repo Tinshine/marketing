@@ -10,13 +10,13 @@ import (
 
 type Task struct {
 	gorm.Model
-	Name        string          `gorm:"column:"name"`
-	Type        engine.TaskType `gorm:"column:"type"`
-	Domain      string          `gorm:"column:"domain"`
-	TryPath     string          `gorm:"column:"try_path"`
-	CancelPath  string          `gorm:"column:"cancel_path"`
-	ConfirmPath string          `gorm:"column:"confirm_path"`
-	Handler     string          `gorm:"column:"handler"` // rpc handler name
+	Name        string        `gorm:"column:"name"`
+	Type        engine.TrType `gorm:"column:"type"`
+	Domain      string        `gorm:"column:"domain"`
+	TryPath     string        `gorm:"column:"try_path"`
+	CancelPath  string        `gorm:"column:"cancel_path"`
+	ConfirmPath string        `gorm:"column:"confirm_path"`
+	Handler     string        `gorm:"column:"handler"` // rpc handler name
 }
 
 func (t *Task) TableName() string {

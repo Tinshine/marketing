@@ -23,4 +23,6 @@ var (
 	GormScanWrongType     = newErr(-19, "Gorm scan wrong type")
 	BatchQueryLenNotMatch = newErr(-20, "Batch query len not match")
 	TransactionConfirmed  = newErr(-21, "Transaction already confirmed")
+	TransactionCanceled   = newErr(-22, "Transaction already canceled")
+	DuplicateRpcTask      = newErr(-23, "Duplicate rpc task")
 )

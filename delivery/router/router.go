@@ -7,11 +7,11 @@ import (
 	"marketing/delivery/services/credit"
 )
 
-var rt = map[resource.ItemType]client.C{
+var rt = map[resource.ItemType]client.D{
 	resource.Credit: &credit.Credit{},
 }
 
-func GetClient(itemType resource.ItemType) (client.C, error) {
+func GetClient(itemType resource.ItemType) (client.D, error) {
 	c, ok := rt[itemType]
 	if !ok {
 		return nil, errs.NoDeliveryClient

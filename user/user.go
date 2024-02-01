@@ -15,4 +15,6 @@ func GetInfo(ctx context.Context, rq InfoReq) (*U, error) {
 	return nil, nil
 }
 
-type U interface{}
+type U interface {
+	GetId() string
+}

@@ -4,52 +4,64 @@ import (
 	"context"
 	"marketing/consts"
 	"marketing/database/rds"
-	"marketing/task"
+	"marketing/engine/transcation/model"
+	"marketing/engine/transcation/tr"
+	tsM "marketing/task/model"
 	"marketing/util/idgen"
 	"marketing/util/log"
 
 	"github.com/pkg/errors"
 )
 
-type tr struct {
-	Tasks    []task.T
-	TryResps map[uint]*task.Resp
+type tx struct {
+	TryResps map[uint]*model.Resp
 	Ev       consts.Env
-	Txs      map[uint]*Transaction
+	Trs      []model.T
+	TxId     string
 }
 
-func NewTr(tasks []task.T, ev consts.Env) *tr {
-	return &tr{
-		Tasks: tasks,
-		Ev:    ev,
+func NewTx(ev consts.Env) *tx {
+	return &tx{
+		Ev: ev,
 	}
 }
 
-func (t *tr) newTransaction(ctx context.Context) error {
+func (t *tx) newTransaction(ctx context.Context, tasks []*tsM.Task) error {
+	// make map: task_id -> Tr
+	trMap := make(map[uint]model.T, len(tasks))
+	for _, tsk := range tasks {
+		trMap[tsk.ID] = tr.NewTr(tsk)
+	}
+
 	txId, err := idgen.Gen(ctx)
 	if err != nil {
 		return errors.WithMessage(err, "idgen gen")
 	}
-	var trans []*Transaction
-	for _, tsk := range t.Tasks {
-		trans = append(trans, &Transaction{
+	var ts []*model.Transaction
+	for _, tsk := range tasks {
+		ts = append(ts, &model.Transaction{
 			State:  consts.StateTry,
-			TaskId: tsk.GetId(),
+			TaskId: tsk.ID,
 			TxId:   txId,
 		})
 	}
-	if err := rds.DB(ctx, t.Ev).Create(&trans).Error; err != nil {
+	if err := rds.DB(ctx, t.Ev).Create(&ts).Error; err != nil {
 		return errors.WithMessage(err, "create")
 	}
-	txs := make(map[uint]*Transaction, len(trans))
-	for i := range trans {
-		txs[trans[i].TaskId] = trans[i]
+
+	t.Trs = make([]model.T, 0, len(trMap))
+	// traverse map to invoke each Tr's SetTrId func
+	// ti.ID is the tr_id corresponding to ti.TaskId
+	for _, ti := range ts {
+		tr := trMap[ti.TaskId]
+		tr.SetTrId(ti.ID)
+		t.Trs = append(t.Trs, tr)
 	}
-	t.Txs = txs
+	t.TxId = txId
 	return nil
 }
 
-func (t *tr) Execute(ctx context.Context, params *task.Params) error {
+func (t *tx) Execute(ctx context.Context, tasks []*tsM.Task, params *model.Params) error {
 	var err error
 	defer func() {
 		if err != nil {
@@ -59,7 +71,7 @@ func (t *tr) Execute(ctx context.Context, params *task.Params) error {
 		}
 	}()
 
-	if err = t.newTransaction(ctx); err != nil {
+	if err = t.newTransaction(ctx, tasks); err != nil {
 		return errors.WithMessage(err, "new transaction")
 	}
 
@@ -69,59 +81,87 @@ func (t *tr) Execute(ctx context.Context, params *task.Params) error {
 	return nil
 }
 
-func (t *tr) Commit(ctx context.Context, params *task.Params) {
-	// todo.. parallel confirm
-}
-
-func (t *tr) Rollback(ctx context.Context, params *task.Params) {
-	if len(t.TryResps) == 0 {
-		return
-	}
-	for i := range t.Tasks {
+func (t *tx) Commit(ctx context.Context, params *model.Params) {
+	for i := range t.Trs {
 		i := i
 		go func() {
-			tsk := t.Tasks[i]
-			tx := t.Txs[tsk.GetId()]
 			var err error
 			defer func() {
 				if err != nil {
-					retryCancel <- tx
+					retryConfirm <- t.Trs[i]
 				}
 			}()
-			if err = cancelTransaction(ctx, tx, t.Ev); err != nil {
-				log.Error("Rollback.cancelTransaction", err, "task", tsk.GetId())
+			var resp *model.Resp
+			resp, err = t.Trs[i].Confirm(ctx, params)
+			if err != nil {
+				log.Error("Commit.confirm.Error", err, "trId", t.Trs[i].GetTrId())
 				return
 			}
-			if _, ok := t.TryResps[tsk.GetId()]; ok {
-				var resp *task.Resp
-				resp, err = tsk.Cancel(ctx, params)
-				if err != nil {
-					log.Error("Rollback.Cancel.Error", err, "tx", tx)
-					return
-				}
-				log.Info("Rollback.Cancel.Success", "tx", tx, "resp", resp)
+			log.Info("Commit.confirm.success", "trId", t.Trs[i].GetTrId(), "resp", resp)
+			// after all have been confirmed, update db,
+			// if confirm success, but update failed, retry will be ok.
+			if err := model.ConfirmTx(ctx, t.Trs[i].GetTrId(), t.Ev); err != nil {
+				log.Error("Commit.confirmTx", err, "trId", t.Trs[i].GetTrId())
+				return
 			}
-			// no try, no need to cancel
+		}()
+	}
+}
+
+func (t *tx) Rollback(ctx context.Context, params *model.Params) {
+	if len(t.TryResps) == 0 {
+		return
+	}
+	for i := range t.Trs {
+		i := i
+		if _, ok := t.TryResps[t.Trs[i].GetTrId()]; !ok {
+			continue
+		}
+		go func() {
+			var err error
+			defer func() {
+				if err != nil {
+					retryCancel <- t.Trs[i]
+				}
+			}()
+			var resp *model.Resp
+			resp, err = t.Trs[i].Cancel(ctx, params)
+			if err != nil {
+				log.Error("Rollback.Cancel.Error", err, "tx", t)
+				return
+			}
+			log.Info("Rollback.Cancel.Success", "tx", t, "resp", resp)
+			// after all have been cancelled success, update db,
+			// if cancellation success, but update failed, retry with be ok.
+			if err = model.CancelTx(ctx, t.Trs[i].GetTrId(), t.Ev); err != nil {
+				log.Error("Rollback.cancelTx", err, "trId", t.Trs[i].GetTrId())
+				return
+			}
 		}()
 
 	}
 }
 
-func (t *tr) Try(ctx context.Context, params *task.Params) error {
-	resps := make(map[uint]*task.Resp, len(t.Tasks))
+func (t *tx) Try(ctx context.Context, params *model.Params) error {
+	resps := make(map[uint]*model.Resp, len(t.Trs))
 	defer func() {
 		t.TryResps = resps
 	}()
 
-	for _, task := range t.Tasks {
-		resp, err := task.Try(ctx, params)
+	for _, tr := range t.Trs {
+		resp, err := tr.Try(ctx, params)
 		if err != nil {
+			log.Error("Try.Try.Error", err, "tx", tr)
 			return err
 		}
-		resps[task.GetId()] = resp
+		log.Info("Try.Try.Success", "tx", tr, "resp", resp)
+		resps[tr.GetTrId()] = resp
 	}
+
+	log.Info("Try.All.Success", "tx", t, "resp")
 	return nil
 }
 
 // todo...
-var retryCancel chan *Transaction
+var retryCancel chan model.T
+var retryConfirm chan model.T

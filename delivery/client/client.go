@@ -5,7 +5,7 @@ import (
 	"marketing/consts/resource"
 )
 
-type C interface {
+type D interface {
 	Delivery(context.Context, *DeliveryReq) (*DeliveryResp, error)
 }
 

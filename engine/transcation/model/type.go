@@ -1,15 +1,20 @@
-package task
+package model
 
-import "context"
+import (
+	"context"
+	"marketing/user"
+)
 
 type T interface {
-	GetId() uint
+	SetTrId(uint)
+	GetTrId() uint
 	Try(context.Context, *Params) (*Resp, error)
 	Cancel(context.Context, *Params) (*Resp, error)
 	Confirm(context.Context, *Params) (*Resp, error)
 }
 
 type Params struct {
+	User user.U
 }
 
 type Resp struct {
