@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"marketing/consts"
 	"marketing/user"
 )
 
@@ -14,7 +15,9 @@ type T interface {
 }
 
 type Params struct {
-	User user.U
+	Reward map[string]interface{}
+	User   user.U
+	Ev     consts.Env
 }
 
 type Resp struct {
