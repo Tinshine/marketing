@@ -111,38 +111,18 @@ func confirmOrder(ctx context.Context, req *dM.RewardReq) error {
 }
 
 func delivery(ctx context.Context, req *dM.RewardReq) error {
-	gResp, err := gServ.Query(ctx, &gM.QueryReq{
-		AppId:   req.AppId,
-		GroupId: &req.GroupId,
-		Env:     req.Ev,
-	})
+	gift, err := getGift(ctx, req)
 	if err != nil {
-		return errors.WithMessage(err, "query gift group")
+		return errors.WithMessage(err, "get gift")
 	}
-	if len(gResp.Data) == 0 {
-		return errors.WithMessage(errs.GiftGroupNotFound, "gift group not found")
-	}
-	if len(gResp.Data) > 1 {
-		return errors.WithMessage(errs.Internal, "gift group not unique")
-	}
-	gift := gResp.Data[0]
 
 	clis := make([]client.D, 0, len(gift.Items))
-	for _, item := range gift.Items {
-		itemResp, err := itemServ.Query(ctx, &itemM.QueryReq{
-			AppId:  req.AppId,
-			ItemId: &item.ItemId,
-		})
+	for i := range gift.Items {
+		item, err := getItem(ctx, req.AppId, gift.Items[i].ItemId)
 		if err != nil {
-			return errors.WithMessage(err, "query item")
+			return errors.WithMessage(err, "get item")
 		}
-		if len(itemResp.Data) == 0 {
-			return errors.WithMessage(errs.ItemNotFound, "item not found")
-		}
-		if len(itemResp.Data) > 1 {
-			return errors.WithMessage(errs.Internal, "item not unique")
-		}
-		cli, err := router.GetClient(itemResp.Data[0].ItemType)
+		cli, err := router.GetClient(item.ItemType)
 		if err != nil {
 			return errors.WithMessage(errs.UnsupportedItemType, "unsupported item type")
 		}
@@ -165,4 +145,39 @@ func delivery(ctx context.Context, req *dM.RewardReq) error {
 	}
 	wg.Wait()
 	return nil
+}
+
+func getGift(ctx context.Context, req *dM.RewardReq) (*gM.RespModel, error) {
+	gResp, err := gServ.Query(ctx, &gM.QueryReq{
+		AppId:   req.AppId,
+		GroupId: &req.GroupId,
+		Env:     req.Ev,
+	})
+	if err != nil {
+		return nil, errors.WithMessage(err, "query gift group")
+	}
+	if len(gResp.Data) == 0 {
+		return nil, errors.WithMessage(errs.GiftGroupNotFound, "gift group not found")
+	}
+	if len(gResp.Data) > 1 {
+		return nil, errors.WithMessage(errs.Internal, "gift group not unique")
+	}
+	return gResp.Data[0], err
+}
+
+func getItem(ctx context.Context, appId uint, itemId int) (*itemM.RespModel, error) {
+	resp, err := itemServ.Query(ctx, &itemM.QueryReq{
+		AppId:  appId,
+		ItemId: &itemId,
+	})
+	if err != nil {
+		return nil, errors.WithMessage(err, "query item")
+	}
+	if len(resp.Data) == 0 {
+		return nil, errors.WithMessage(errs.ItemNotFound, "item not found")
+	}
+	if len(resp.Data) > 1 {
+		return nil, errors.WithMessage(errs.Internal, "item not unique")
+	}
+	return resp.Data[0], err
 }
