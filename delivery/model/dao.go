@@ -2,18 +2,22 @@ package model
 
 import (
 	"context"
+	"fmt"
 	"marketing/consts"
 	"marketing/consts/errs"
 	"marketing/database/rds"
+	"math/rand"
+	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
-func FindOrder(c context.Context, groupId int64, userId string, txId uint, ev consts.Env) (*Order, error) {
+func FindOrder(c context.Context, r *RewardReq) (*Order, error) {
 	var order Order
-	if err := rds.DB(c, ev).
-		Where("tx_id = ? and user_id = ? and group_id = ?", txId, userId, groupId).
+	if err := rds.DB(c, r.Ev).
+		Where("tx_id = ? and user_id = ? and group_id = ?", r.TxId, r.UserId, r.GroupId).
 		Find(&order).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return nil, errors.WithMessage(errs.Internal, err.Error())
@@ -23,30 +27,32 @@ func FindOrder(c context.Context, groupId int64, userId string, txId uint, ev co
 	return &order, nil
 }
 
-func FirstOrInitOrder(c context.Context, grougId int64, userId string, txId uint, ev consts.Env) (*Order, error) {
-	var order Order
-	if err := rds.DB(c, ev).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("tx_id = ? and user_id = ? and group_id = ?", txId, userId, grougId).
-			First(&order).Error; err != nil {
-			if err != gorm.ErrRecordNotFound {
-				return errors.WithMessage(errs.Internal, err.Error())
-			}
-			if err == nil {
-				return nil
-			}
-			order = Order{
-				UserId:  userId,
-				TxId:    txId,
-				GroupId: grougId,
-				TrState: consts.StateTry,
-			}
-			if err := tx.Create(&order).Error; err != nil {
-				return errors.WithStack(err)
-			}
-		}
-		return nil
-	}); err != nil {
-		return nil, errors.WithMessage(err, "transaction")
+func CreateOrder(c context.Context, req *RewardReq, state consts.TxState) (*Order, error) {
+	order := Order{}
+	order.AppId = req.AppId
+	order.GroupId = req.GroupId
+	order.UserId = req.UserId
+	order.TxId = req.TxId
+	order.OrderId = genOrderId(req)
+	order.TxState = consts.StateTry
+	if err := rds.DB(c, req.Ev).Create(&order).Error; err != nil {
+		return nil, errors.WithMessage(errs.Internal, err.Error())
 	}
 	return &order, nil
+}
+
+func UpdateOrder(c context.Context, id uint, ev consts.Env, src, dest consts.TxState) error {
+	return rds.DB(c, ev).
+		Where("id = ? and tx_state = ?", id, src).
+		UpdateColumn("tx_state", dest).Error
+}
+
+func genOrderId(req *RewardReq) string {
+	now := time.Now().UnixNano()
+	sb := strings.Builder{}
+	for i := 0; i < 4; i++ {
+		n := rand.Intn(26)
+		sb.WriteByte(byte('A' + n))
+	}
+	return fmt.Sprintf("%d-%d-%s-%s", now, req.AppId, req.UserId, sb.String())
 }

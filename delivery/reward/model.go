@@ -1,3 +1,5 @@
 package reward
 
-type rewardReq struct{}
+type rewardReq struct {
+	UserId string
+}

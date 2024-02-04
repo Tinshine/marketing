@@ -25,10 +25,10 @@ const (
 	Web
 )
 
-type TrState int
+type TxState int
 
 const (
-	StateTry TrState = iota
+	StateTry TxState = iota
 	StateCancel
 	StateConfirm
 	StateRetry

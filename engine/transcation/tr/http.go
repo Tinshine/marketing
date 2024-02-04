@@ -11,11 +11,11 @@ type httpTr struct {
 	*tskM.Task
 }
 
-func (h *httpTr) SetTrId(trId uint) {
+func (h *httpTr) SetTxId(trId uint) {
 	h.TrId = trId
 }
 
-func (h *httpTr) GetTrId() uint {
+func (h *httpTr) GetTxId() uint {
 	return h.TrId
 }
 

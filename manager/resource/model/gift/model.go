@@ -29,7 +29,19 @@ type QueryResp struct {
 }
 
 type RespModel struct {
-	Gift
+	Id          int                 `json:"id"`
+	AppId       uint                `json:"app_id"`
+	GiftType    resource.GiftType   `json:"gift_type"`
+	GiftName    string              `json:"gift_name"`
+	LotteryRate LotteryRate         `json:"lottery_rate"`
+	GroupId     int64               `json:"group_id"`
+	Items       []*ItemConfig       `json:"items"`
+	Emails      EmailConfigs        `json:"emails"`
+	State       consts.ReleaseState `json:"state"`
+	CreatedBy   string              `json:"created_by"`
+	UpdatedBy   string              `json:"updated_by"`
+	CreatedAt   int64               `json:"created_at"`
+	UpdatedAt   int64               `json:"updated_at"`
 }
 
 type Gift struct {
@@ -53,7 +65,22 @@ func (g *Gift) TableName() string {
 }
 
 func (g *Gift) ToRespModel() *RespModel {
-	return &RespModel{*g}
+	resp := &RespModel{
+		Id:          g.Id,
+		AppId:       g.AppId,
+		GiftType:    g.GiftType,
+		GiftName:    g.GiftName,
+		LotteryRate: g.LotteryRate,
+		GroupId:     g.GroupId,
+		Items:       g.Items.Decode(),
+		Emails:      g.Emails.Decode(),
+		State:       g.State,
+		CreatedBy:   g.CreatedBy,
+		UpdatedBy:   g.UpdatedBy,
+		CreatedAt:   g.CreatedAt,
+		UpdatedAt:   g.UpdatedAt,
+	}
+	return resp
 }
 
 type LotteryRate string
@@ -61,6 +88,7 @@ type LotteryRate string
 type GiftItems string
 
 type ItemConfig struct {
+	ItemId    int `json:"item_id"`
 	Count     int `json:"count"`
 	RoleLimit int `json:"role_limit"`
 	GameLimit int `json:"game_limit"`

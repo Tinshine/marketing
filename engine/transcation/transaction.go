@@ -54,7 +54,7 @@ func (t *tx) newTransaction(ctx context.Context, tasks []*tsM.Task) error {
 	// ti.ID is the tr_id corresponding to ti.TaskId
 	for _, ti := range ts {
 		tr := trMap[ti.TaskId]
-		tr.SetTrId(ti.ID)
+		tr.SetTxId(ti.ID)
 		t.Trs = append(t.Trs, tr)
 	}
 	t.TxId = txId
@@ -94,14 +94,14 @@ func (t *tx) Commit(ctx context.Context, params *model.Params) {
 			var resp *model.Resp
 			resp, err = t.Trs[i].Confirm(ctx, params)
 			if err != nil {
-				log.Error("Commit.confirm.Error", err, "trId", t.Trs[i].GetTrId())
+				log.Error("Commit.confirm.Error", err, "trId", t.Trs[i].GetTxId())
 				return
 			}
-			log.Info("Commit.confirm.success", "trId", t.Trs[i].GetTrId(), "resp", resp)
+			log.Info("Commit.confirm.success", "trId", t.Trs[i].GetTxId(), "resp", resp)
 			// after all have been confirmed, update db,
 			// if confirm success, but update failed, retry will be ok.
-			if err := model.ConfirmTx(ctx, t.Trs[i].GetTrId(), t.Ev); err != nil {
-				log.Error("Commit.confirmTx", err, "trId", t.Trs[i].GetTrId())
+			if err := model.ConfirmTx(ctx, t.Trs[i].GetTxId(), t.Ev); err != nil {
+				log.Error("Commit.confirmTx", err, "trId", t.Trs[i].GetTxId())
 				return
 			}
 		}()
@@ -114,7 +114,7 @@ func (t *tx) Rollback(ctx context.Context, params *model.Params) {
 	}
 	for i := range t.Trs {
 		i := i
-		if _, ok := t.TryResps[t.Trs[i].GetTrId()]; !ok {
+		if _, ok := t.TryResps[t.Trs[i].GetTxId()]; !ok {
 			continue
 		}
 		go func() {
@@ -133,8 +133,8 @@ func (t *tx) Rollback(ctx context.Context, params *model.Params) {
 			log.Info("Rollback.Cancel.Success", "tx", t, "resp", resp)
 			// after all have been cancelled success, update db,
 			// if cancellation success, but update failed, retry with be ok.
-			if err = model.CancelTx(ctx, t.Trs[i].GetTrId(), t.Ev); err != nil {
-				log.Error("Rollback.cancelTx", err, "trId", t.Trs[i].GetTrId())
+			if err = model.CancelTx(ctx, t.Trs[i].GetTxId(), t.Ev); err != nil {
+				log.Error("Rollback.cancelTx", err, "trId", t.Trs[i].GetTxId())
 				return
 			}
 		}()
@@ -155,7 +155,7 @@ func (t *tx) Try(ctx context.Context, params *model.Params) error {
 			return err
 		}
 		log.Info("Try.Try.Success", "tx", tr, "resp", resp)
-		resps[tr.GetTrId()] = resp
+		resps[tr.GetTxId()] = resp
 	}
 
 	log.Info("Try.All.Success", "tx", t, "resp")

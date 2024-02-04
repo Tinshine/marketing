@@ -8,7 +8,7 @@ import (
 
 type Transaction struct {
 	gorm.Model
-	State  consts.TrState `gorm:"column:state"`
+	State  consts.TxState `gorm:"column:state"`
 	TaskId uint           `gorm:"column:task_id"`
 	TxId   string         `gorm:"column:tx_id"`
 }

@@ -9,11 +9,11 @@ type deductQuota struct {
 	TrId uint
 }
 
-func (d *deductQuota) SetTrId(trId uint) {
+func (d *deductQuota) SetTxId(trId uint) {
 	d.TrId = trId
 }
 
-func (d *deductQuota) GetTrId() uint {
+func (d *deductQuota) GetTxId() uint {
 	return d.TrId
 }
 func (d *deductQuota) Try(ctx context.Context, p *model.Params) (*model.Resp, error) {

@@ -9,14 +9,15 @@ import (
 type ItemType int
 
 const (
-	Currency ItemType = iota // virtual currency
+	GameItem ItemType = iota
+	Currency          // virtual currency
 	Credit
 	CDKey
 	UnknownItemType
 )
 
 func (t ItemType) Validate() error {
-	if t < Currency || t >= UnknownItemType {
+	if t < GameItem || t >= UnknownItemType {
 		return errors.WithMessage(errs.InvalidParams, "unsupported item type")
 	}
 	return nil
