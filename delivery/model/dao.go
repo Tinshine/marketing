@@ -10,13 +10,29 @@ import (
 	"gorm.io/gorm"
 )
 
+func FindOrder(c context.Context, groupId int64, userId string, txId uint, ev consts.Env) (*Order, error) {
+	var order Order
+	if err := rds.DB(c, ev).
+		Where("tx_id = ? and user_id = ? and group_id = ?", txId, userId, groupId).
+		Find(&order).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return nil, errors.WithMessage(errs.Internal, err.Error())
+		}
+		return nil, errs.OrderNotFound
+	}
+	return &order, nil
+}
+
 func FirstOrInitOrder(c context.Context, grougId int64, userId string, txId uint, ev consts.Env) (*Order, error) {
 	var order Order
 	if err := rds.DB(c, ev).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("tx_id = ? and user_id = ? and group_id = ?", txId, grougId, userId).
+		if err := tx.Where("tx_id = ? and user_id = ? and group_id = ?", txId, userId, grougId).
 			First(&order).Error; err != nil {
 			if err != gorm.ErrRecordNotFound {
 				return errors.WithMessage(errs.Internal, err.Error())
+			}
+			if err == nil {
+				return nil
 			}
 			order = Order{
 				UserId:  userId,

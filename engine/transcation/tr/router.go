@@ -1,7 +1,7 @@
 package tr
 
 import (
-	"marketing/delivery"
+	"marketing/delivery/reward"
 	"marketing/engine/transcation/model"
 	tskM "marketing/task/model"
 
@@ -19,7 +19,7 @@ func NewTr(task *tskM.Task) model.T {
 		case engine.TaskId_DeductQuota:
 			return &deductQuota{}
 		case engine.TaskId_Reward:
-			return delivery.NewReward()
+			return reward.NewReward()
 		default:
 			return nil
 		}

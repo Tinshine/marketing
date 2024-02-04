@@ -15,9 +15,9 @@ type T interface {
 }
 
 type Params struct {
-	Reward map[string]interface{}
-	User   user.U
-	Ev     consts.Env
+	Input map[string]interface{}
+	User  user.U
+	Ev    consts.Env
 }
 
 type Resp struct {

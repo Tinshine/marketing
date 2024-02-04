@@ -25,4 +25,6 @@ var (
 	TransactionConfirmed  = newErr(-21, "Transaction already confirmed")
 	TransactionCanceled   = newErr(-22, "Transaction already canceled")
 	DuplicateRpcTask      = newErr(-23, "Duplicate rpc task")
+	OrderNotFound         = newErr(-24, "Order not found")
+	DuplicatedTry         = newErr(-25, "Duplicated try")
 )
