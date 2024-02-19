@@ -2,10 +2,16 @@ package idgen
 
 import (
 	"context"
-	"errors"
+	"marketing/consts/errs"
+
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 func Gen(ctx context.Context) (string, error) {
-	// todo...
-	return "", errors.New("to do")
+	u, err := uuid.NewRandom()
+	if err != nil {
+		return "", errors.WithMessage(errs.Internal, err.Error())
+	}
+	return u.String(), nil
 }

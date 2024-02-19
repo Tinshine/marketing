@@ -1,9 +1,10 @@
 package conf
 
 const (
-	LogDirConfKey    = "log.dir"
-	MySQLConfUserKey = "mysql.user"
-	MySQLConfPswdKey = "mysql.pswd"
-	MySQLConfIPKey   = "mysql.ip"
-	MySQLConfPortKey = "mysql.port"
+	ConfKeyAppLogFile  = "app.log"
+	ConfKeyMysqlUser   = "mysql.user"
+	ConfKeyMysqlPswd   = "mysql.pswd"
+	ConfKeyMysqlIP     = "mysql.ip"
+	ConfKeyMysqlPort   = "mysql.port"
+	ConfKeyMysqlDBName = "mysql.db"
 )

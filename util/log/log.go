@@ -1,11 +1,13 @@
 package log
 
 import (
+	"fmt"
 	"log"
 	"marketing/consts"
 	confConst "marketing/consts/conf"
 	"marketing/util/conf"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -17,7 +19,7 @@ var logger *log.Logger
 var Init = sync.OnceFunc(setLogger)
 
 func setLogger() {
-	fileName, err := conf.GetConf(consts.Test, confConst.LogDirConfKey)
+	fileName, err := conf.GetConf(consts.Test, confConst.ConfKeyAppLogFile)
 	if err != nil {
 		panic(err)
 	}
@@ -26,33 +28,50 @@ func setLogger() {
 		panic(err)
 	}
 
-	logger = log.New(f, "AppLog ", log.Ldate|log.Ltime|log.Lshortfile)
+	logger = log.New(f, "AppLog ", log.Ldate|log.Ltime)
 }
 
 func Info(event string, kvs ...interface{}) {
 	sB := &strings.Builder{}
-	sB.WriteString("[INFO] ")
-	writeKVs(sB, kvs...)
+	writeKVs(sB, info, event, kvs...)
 	logger.Printf(sB.String())
 }
 
-func Error(event string, err error, kvs ...interface{}) {
+func Error(event string, e error, kvs ...interface{}) {
 	sB := &strings.Builder{}
-	sB.WriteString("[ERROR] error=")
-	sB.WriteString(err.Error())
-	sB.WriteString(" ")
-	writeKVs(sB, kvs...)
+	kvs = append([]interface{}{"err", e}, kvs...)
+	writeKVs(sB, err, event, kvs...)
 	logger.Printf(sB.String())
 }
 
 func Warn(event string, kvs ...interface{}) {
 	sB := &strings.Builder{}
-	sB.WriteString("[WARN] ")
-	writeKVs(sB, kvs...)
+	writeKVs(sB, warn, event, kvs...)
 	logger.Printf(sB.String())
 }
 
-func writeKVs(sB *strings.Builder, kvs ...interface{}) {
+type level string
+
+const (
+	info level = "Info"
+	err  level = "Error"
+	warn level = "Warn"
+)
+
+func writeKVs(sB *strings.Builder, l level, event string, kvs ...interface{}) {
+	sB.WriteString(string(l))
+	_, file, line, ok := runtime.Caller(2)
+	if ok {
+		if l == info || l == warn {
+			sB.WriteString("\t")
+		}
+		sB.WriteString(fmt.Sprintf("\t%s:%d ", file, line))
+	}
+	if event != "" {
+		sB.WriteString("Event=")
+		sB.WriteString(event)
+		sB.WriteString(" | ")
+	}
 	if len(kvs)%2 == 1 {
 		kvs = append(kvs, "")
 	}
@@ -60,7 +79,9 @@ func writeKVs(sB *strings.Builder, kvs ...interface{}) {
 		sB.WriteString(formatInterface(kvs[i]))
 		sB.WriteString("=")
 		sB.WriteString(formatInterface(kvs[i+1]))
-		sB.WriteString(" ")
+		if i+2 < len(kvs) {
+			sB.WriteString(" | ")
+		}
 	}
 }
 

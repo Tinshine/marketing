@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"marketing/consts"
 	"marketing/consts/errs"
@@ -9,6 +10,9 @@ import (
 )
 
 func GetUsername(ctx context.Context) (string, error) {
+	if ctx == nil {
+		return "", errors.New("nil context")
+	}
 	v := ctx.Value(consts.CtxUsernameKey)
 	if v == nil {
 		return "", errs.EmptyUsername

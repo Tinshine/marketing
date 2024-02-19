@@ -63,6 +63,7 @@ func (r *R) do(ctx context.Context) (*Resp, error) {
 	}
 
 	// todo.. need lock here to prevent concurrent execute
+	// is it nessecary?
 	if err := transaction.NewTx(r.Env).Execute(ctx, ts, &model.Params{}); err != nil {
 		return nil, errors.WithMessage(err, "execute transaction")
 	}

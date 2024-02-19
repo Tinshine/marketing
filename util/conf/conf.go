@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"fmt"
 	"io"
 	"marketing/consts"
 	"marketing/consts/errs"
@@ -15,14 +16,15 @@ var configure = make(map[consts.Env]map[string]string)
 var Init = sync.OnceFunc(initConf)
 
 func initConf() {
-	loadConf(consts.Test, "~/go/src/marketing/conf/log.json")
-	loadConf(consts.Test, "~/go/src/marketing/conf/mysql.json")
+	loadConf(consts.Test, "../../conf/log.json")
+	loadConf(consts.Test, "../../conf/mysql_test.json")
+	loadConf(consts.Prod, "../../conf/mysql_prod.json")
 }
 
 func loadConf(env consts.Env, path string) {
 	f, err := os.Open(path)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("err is: %v, path is: %s", err, path))
 	}
 	defer f.Close()
 

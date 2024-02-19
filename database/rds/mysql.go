@@ -6,6 +6,7 @@ import (
 	"marketing/consts"
 	confConst "marketing/consts/conf"
 	"marketing/util/conf"
+	"marketing/util/log"
 	"sync"
 
 	"gorm.io/driver/mysql"
@@ -25,26 +26,31 @@ func setDB() {
 }
 
 func setTestDB() {
-	usr, err := conf.GetConf(consts.Test, confConst.MySQLConfUserKey)
+	usr, err := conf.GetConf(consts.Test, confConst.ConfKeyMysqlUser)
 	if err != nil {
 		panic(err)
 	}
-	pswd, err := conf.GetConf(consts.Test, confConst.MySQLConfPswdKey)
+	pswd, err := conf.GetConf(consts.Test, confConst.ConfKeyMysqlPswd)
 	if err != nil {
 		panic(err)
 	}
-	ip, err := conf.GetConf(consts.Test, confConst.MySQLConfIPKey)
+	ip, err := conf.GetConf(consts.Test, confConst.ConfKeyMysqlIP)
 	if err != nil {
 		panic(err)
 	}
-	port, err := conf.GetConf(consts.Test, confConst.MySQLConfPortKey)
+	port, err := conf.GetConf(consts.Test, confConst.ConfKeyMysqlPort)
+	if err != nil {
+		panic(err)
+	}
+	dbName, err := conf.GetConf(consts.Test, confConst.ConfKeyMysqlDBName)
 	if err != nil {
 		panic(err)
 	}
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/dbname?charset=utf8mb4&parseTime=True&loc=Local",
-		usr, pswd, ip, port,
+		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		usr, pswd, ip, port, dbName,
 	)
+	log.Info("setTestDB.conf", "usr", usr, "pswd", pswd, "ip", ip, "port", port, "dsn", dsn)
 	testDB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic(err)
@@ -52,26 +58,31 @@ func setTestDB() {
 }
 
 func setProdDB() {
-	usr, err := conf.GetConf(consts.Prod, confConst.MySQLConfUserKey)
+	usr, err := conf.GetConf(consts.Prod, confConst.ConfKeyMysqlUser)
 	if err != nil {
 		panic(err)
 	}
-	pswd, err := conf.GetConf(consts.Prod, confConst.MySQLConfPswdKey)
+	pswd, err := conf.GetConf(consts.Prod, confConst.ConfKeyMysqlPswd)
 	if err != nil {
 		panic(err)
 	}
-	ip, err := conf.GetConf(consts.Prod, confConst.MySQLConfIPKey)
+	ip, err := conf.GetConf(consts.Prod, confConst.ConfKeyMysqlIP)
 	if err != nil {
 		panic(err)
 	}
-	port, err := conf.GetConf(consts.Prod, confConst.MySQLConfPortKey)
+	port, err := conf.GetConf(consts.Prod, confConst.ConfKeyMysqlPort)
+	if err != nil {
+		panic(err)
+	}
+	dbName, err := conf.GetConf(consts.Prod, confConst.ConfKeyMysqlDBName)
 	if err != nil {
 		panic(err)
 	}
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/dbname?charset=utf8mb4&parseTime=True&loc=Local",
-		usr, pswd, ip, port,
+		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		usr, pswd, ip, port, dbName,
 	)
+	log.Info("setProdDB.conf", "usr", usr, "pswd", pswd, "ip", ip, "port", port, "dsn", dsn)
 	prodDB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic(err)
