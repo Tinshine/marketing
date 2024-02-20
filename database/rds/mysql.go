@@ -90,11 +90,11 @@ func setProdDB() {
 }
 
 func TestDB(ctx context.Context) *gorm.DB {
-	return testDB.WithContext(ctx)
+	return testDB.WithContext(ctx).Debug()
 }
 
 func ProdDB(ctx context.Context) *gorm.DB {
-	return prodDB.WithContext(ctx)
+	return prodDB.WithContext(ctx).Debug()
 }
 
 func DB(ctx context.Context, ev consts.Env) *gorm.DB {

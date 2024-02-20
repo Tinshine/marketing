@@ -18,7 +18,7 @@ func FindOrder(c context.Context, r *RewardReq) (*Order, error) {
 	var order Order
 	if err := rds.DB(c, r.Ev).
 		Where("tx_id = ? and user_id = ? and group_id = ?", r.TxId, r.UserId, r.GroupId).
-		Find(&order).Error; err != nil {
+		First(&order).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return nil, errors.WithMessage(errs.Internal, err.Error())
 		}

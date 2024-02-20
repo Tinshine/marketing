@@ -16,7 +16,7 @@ func (d *Slice[T]) Scan(value interface{}) error {
 	case string:
 		return sonic.UnmarshalString(v, d)
 	default:
-		return errs.Bind
+		return errs.GormScanWrongType
 	}
 }
 
