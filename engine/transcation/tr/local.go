@@ -6,14 +6,10 @@ import (
 )
 
 type deductQuota struct {
-	TrId uint
+	TrId string
 }
 
-func (d *deductQuota) SetTxId(trId uint) {
-	d.TrId = trId
-}
-
-func (d *deductQuota) GetTxId() uint {
+func (d *deductQuota) GetTxId() string {
 	return d.TrId
 }
 func (d *deductQuota) Try(ctx context.Context, p *model.Params) (*model.Resp, error) {

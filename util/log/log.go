@@ -5,6 +5,7 @@ import (
 	"log"
 	"marketing/consts"
 	confConst "marketing/consts/conf"
+	"marketing/util/common"
 	"marketing/util/conf"
 	"os"
 	"runtime"
@@ -23,7 +24,11 @@ func setLogger() {
 	if err != nil {
 		panic(err)
 	}
-	f, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	rPath, err := common.GetRelativePath()
+	if err != nil {
+		panic(err)
+	}
+	f, err := os.OpenFile(rPath+fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
 	}

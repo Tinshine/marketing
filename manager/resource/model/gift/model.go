@@ -144,6 +144,9 @@ func (es EmailConfigs) Validate() error {
 			visited[l] = struct{}{}
 		}
 	}
+	if !hasDefault {
+		return errors.WithMessage(errs.InvalidParams, "one default config needed")
+	}
 	return nil
 }
 

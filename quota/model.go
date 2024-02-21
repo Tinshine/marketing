@@ -3,10 +3,10 @@ package quota
 type DeductQuotaReq struct {
 	UserId  string
 	QuotaId uint
-	TxId    uint
+	TxId    string
 }
 
-func NewDeductQuotaReq(userId string, quotaId uint, txId uint) *DeductQuotaReq {
+func NewDeductQuotaReq(userId string, quotaId uint, txId string) *DeductQuotaReq {
 	return &DeductQuotaReq{
 		UserId:  userId,
 		QuotaId: quotaId,

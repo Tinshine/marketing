@@ -8,7 +8,7 @@ import (
 	"marketing/consts/engine"
 )
 
-func NewTr(task *tskM.Task) model.T {
+func NewTr(task *tskM.Task, txId string) model.T {
 	switch task.Type {
 	case engine.Tr_HTTP:
 		return &httpTr{Task: task}
@@ -19,7 +19,7 @@ func NewTr(task *tskM.Task) model.T {
 		case engine.TaskId_DeductQuota:
 			return &deductQuota{}
 		case engine.TaskId_Reward:
-			return reward.NewReward()
+			return reward.NewReward(txId)
 		default:
 			return nil
 		}

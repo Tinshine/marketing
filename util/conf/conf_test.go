@@ -24,7 +24,7 @@ func TestGetConf(t *testing.T) {
 				env: consts.Test,
 				key: conf.ConfKeyAppLogFile,
 			},
-			want:    "/output/log",
+			want:    "/output/app.log",
 			wantErr: false,
 		},
 		{

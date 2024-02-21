@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"marketing/consts"
 	"marketing/consts/errs"
+	"marketing/database/rds"
+	"marketing/util/conf"
+	"marketing/util/log"
 	"strings"
 )
 
@@ -31,4 +34,10 @@ func MakeKey(items ...interface{}) string {
 	}
 	key := sb.String()
 	return key[:len(key)-1]
+}
+
+func TestInit() {
+	conf.Init()
+	log.Init()
+	rds.Init()
 }

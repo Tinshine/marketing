@@ -8,14 +8,14 @@ import (
 )
 
 type reward struct {
-	TxId uint
+	TxId string
 }
 
-func NewReward() *reward { return &reward{} }
+func NewReward(txId string) *reward {
+	return &reward{txId}
+}
 
-func (r *reward) SetTxId(trId uint) { r.TxId = trId }
-
-func (r *reward) GetTxId() uint { return r.TxId }
+func (r *reward) GetTxId() string { return r.TxId }
 
 func (r *reward) Try(ctx context.Context, params *trM.Params) (*trM.Resp, error) {
 	req, err := parseParams(r.TxId, params)

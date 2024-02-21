@@ -9,7 +9,7 @@ type Order struct {
 	Id        uint           `gorm:"id"`
 	AppId     uint           `gorm:"app_id"`
 	OrderId   string         `gorm:"order_id"`
-	TxId      uint           `gorm:"tx_id"`
+	TxId      string         `gorm:"tx_id"`
 	GroupId   uint           `gorm:"group_id"` // gift group_id
 	UserId    string         `gorm:"user_id"`
 	TxState   consts.TxState `gorm:"tx_state"`
@@ -25,7 +25,7 @@ type RewardReq struct {
 	Ev      consts.Env
 	UserId  string
 	QuotaId uint
-	TxId    uint
+	TxId    string
 	AppId   uint
 	GroupId uint
 }

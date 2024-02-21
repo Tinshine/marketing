@@ -5,7 +5,9 @@ import (
 	"io"
 	"marketing/consts"
 	"marketing/consts/errs"
+	"marketing/util/common"
 	"os"
+	"path"
 	"sync"
 
 	"github.com/bytedance/sonic"
@@ -16,15 +18,20 @@ var configure = make(map[consts.Env]map[string]string)
 var Init = sync.OnceFunc(initConf)
 
 func initConf() {
-	loadConf(consts.Test, "../../conf/log.json")
-	loadConf(consts.Test, "../../conf/mysql_test.json")
-	loadConf(consts.Prod, "../../conf/mysql_prod.json")
+	loadConf(consts.Test, "log.json")
+	loadConf(consts.Test, "mysql_test.json")
+	loadConf(consts.Prod, "mysql_prod.json")
 }
 
-func loadConf(env consts.Env, path string) {
-	f, err := os.Open(path)
+func loadConf(env consts.Env, fileName string) {
+	rPath, err := common.GetRelativePath()
 	if err != nil {
-		panic(fmt.Sprintf("err is: %v, path is: %s", err, path))
+		panic(err)
+	}
+	filePath := path.Join(rPath, "conf", fileName)
+	f, err := os.Open(filePath)
+	if err != nil {
+		panic(fmt.Sprintf("err is: %v, path is: %s", err, fileName))
 	}
 	defer f.Close()
 

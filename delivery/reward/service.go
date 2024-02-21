@@ -19,7 +19,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func parseParams(txId uint, params *trM.Params) (*dM.RewardReq, error) {
+func parseParams(txId string, params *trM.Params) (*dM.RewardReq, error) {
 	req := new(dM.RewardReq)
 	qid, ok := params.Input["quota_id"]
 	if !ok {
@@ -35,7 +35,7 @@ func parseParams(txId uint, params *trM.Params) (*dM.RewardReq, error) {
 	req.Ev = params.Ev
 	req.UserId = params.User.GetId()
 	req.TxId = txId
-	return &dM.RewardReq{}, nil
+	return req, nil
 }
 
 func tryOrder(ctx context.Context, req *dM.RewardReq) error {

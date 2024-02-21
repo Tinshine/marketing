@@ -7,8 +7,7 @@ import (
 )
 
 type T interface {
-	SetTxId(uint)
-	GetTxId() uint
+	GetTxId() string
 	Try(context.Context, *Params) (*Resp, error)
 	Cancel(context.Context, *Params) (*Resp, error)
 	Confirm(context.Context, *Params) (*Resp, error)

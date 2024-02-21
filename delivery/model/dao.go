@@ -2,13 +2,10 @@ package model
 
 import (
 	"context"
-	"fmt"
 	"marketing/consts"
 	"marketing/consts/errs"
 	"marketing/database/rds"
-	"math/rand"
-	"strings"
-	"time"
+	"marketing/util/idgen"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -28,12 +25,16 @@ func FindOrder(c context.Context, r *RewardReq) (*Order, error) {
 }
 
 func CreateOrder(c context.Context, req *RewardReq, state consts.TxState) (*Order, error) {
+	orderId, err := idgen.Gen(c)
+	if err != nil {
+		return nil, errors.WithMessage(err, "idgen gen")
+	}
 	order := Order{}
 	order.AppId = req.AppId
 	order.GroupId = req.GroupId
 	order.UserId = req.UserId
 	order.TxId = req.TxId
-	order.OrderId = genOrderId(req)
+	order.OrderId = orderId
 	order.TxState = consts.StateTry
 	if err := rds.DB(c, req.Ev).Create(&order).Error; err != nil {
 		return nil, errors.WithMessage(errs.Internal, err.Error())
@@ -42,17 +43,7 @@ func CreateOrder(c context.Context, req *RewardReq, state consts.TxState) (*Orde
 }
 
 func UpdateOrder(c context.Context, id uint, ev consts.Env, src, dest consts.TxState) error {
-	return rds.DB(c, ev).
+	return rds.DB(c, ev).Model(&Order{}).
 		Where("id = ? and tx_state = ?", id, src).
 		UpdateColumn("tx_state", dest).Error
-}
-
-func genOrderId(req *RewardReq) string {
-	now := time.Now().UnixNano()
-	sb := strings.Builder{}
-	for i := 0; i < 4; i++ {
-		n := rand.Intn(26)
-		sb.WriteByte(byte('A' + n))
-	}
-	return fmt.Sprintf("%d-%d-%s-%s", now, req.AppId, req.UserId, sb.String())
 }

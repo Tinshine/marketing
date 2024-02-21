@@ -7,15 +7,11 @@ import (
 )
 
 type httpTr struct {
-	TrId uint
+	TrId string
 	*tskM.Task
 }
 
-func (h *httpTr) SetTxId(trId uint) {
-	h.TrId = trId
-}
-
-func (h *httpTr) GetTxId() uint {
+func (h *httpTr) GetTxId() string {
 	return h.TrId
 }
 

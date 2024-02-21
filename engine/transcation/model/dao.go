@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func CancelTx(ctx context.Context, trId uint, ev consts.Env) error {
+func CancelTx(ctx context.Context, trId string, ev consts.Env) error {
 	return rds.DB(ctx, ev).Transaction(func(tx *gorm.DB) error {
 		var r Transaction
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
@@ -32,7 +32,7 @@ func CancelTx(ctx context.Context, trId uint, ev consts.Env) error {
 	})
 }
 
-func ConfirmTx(ctx context.Context, trId uint, ev consts.Env) error {
+func ConfirmTx(ctx context.Context, trId string, ev consts.Env) error {
 	return rds.DB(ctx, ev).Transaction(func(tx *gorm.DB) error {
 		var r Transaction
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).

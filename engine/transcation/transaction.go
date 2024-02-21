@@ -14,7 +14,7 @@ import (
 )
 
 type tx struct {
-	TryResps map[uint]*model.Resp
+	TryResps map[string]*model.Resp
 	Ev       consts.Env
 	Trs      []model.T
 	TxId     string
@@ -27,11 +27,6 @@ func NewTx(ev consts.Env) *tx {
 }
 
 func (t *tx) newTransaction(ctx context.Context, tasks []*tsM.Task) error {
-	// make map: task_id -> Tr
-	trMap := make(map[uint]model.T, len(tasks))
-	for _, tsk := range tasks {
-		trMap[tsk.ID] = tr.NewTr(tsk)
-	}
 
 	txId, err := idgen.Gen(ctx)
 	if err != nil {
@@ -49,13 +44,14 @@ func (t *tx) newTransaction(ctx context.Context, tasks []*tsM.Task) error {
 		return errors.WithMessage(err, "create")
 	}
 
+	// make map: task_id -> Task
+	trMap := make(map[uint]*tsM.Task, len(tasks))
+	for _, tsk := range tasks {
+		trMap[tsk.ID] = tsk
+	}
 	t.Trs = make([]model.T, 0, len(trMap))
-	// traverse map to invoke each Tr's SetTrId func
-	// ti.ID is the tr_id corresponding to ti.TaskId
 	for _, ti := range ts {
-		tr := trMap[ti.TaskId]
-		tr.SetTxId(ti.ID)
-		t.Trs = append(t.Trs, tr)
+		t.Trs = append(t.Trs, tr.NewTr(trMap[ti.TaskId], txId))
 	}
 	t.TxId = txId
 	return nil
@@ -143,7 +139,7 @@ func (t *tx) Rollback(ctx context.Context, params *model.Params) {
 }
 
 func (t *tx) Try(ctx context.Context, params *model.Params) error {
-	resps := make(map[uint]*model.Resp, len(t.Trs))
+	resps := make(map[string]*model.Resp, len(t.Trs))
 	defer func() {
 		t.TryResps = resps
 	}()
