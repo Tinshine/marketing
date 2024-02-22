@@ -16,14 +16,15 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func Query(ctx context.Context, rq *model.QueryReq) (*model.QueryResp, error) {
-	if err := rq.Validate(); err != nil {
+func Query(ctx context.Context, req *model.QueryReq) (*model.QueryResp, error) {
+	if err := req.Validate(); err != nil {
 		return nil, errors.WithMessage(err, "validate")
 	}
 
 	resp := new(model.QueryResp)
-	if rq.Id != nil {
-		gift, err := model.FindById(rds.DB(ctx, rq.Env), *rq.Id)
+	dao := model.InitDAO().SetEnv(req.Env)
+	if req.Id != nil {
+		gift, err := dao.FindById(ctx, *req.Id)
 		if err != nil {
 			return nil, errors.WithMessage(err, "find by id")
 		}
@@ -32,12 +33,12 @@ func Query(ctx context.Context, rq *model.QueryReq) (*model.QueryResp, error) {
 		return resp, nil
 	}
 
-	if rq.AppId == 0 {
+	if req.AppId == 0 {
 		return nil, errors.WithMessage(errs.InvalidParams, "app_id is required")
 	}
 
-	if rq.GroupId != nil {
-		gifts, err := model.FindByGroupId(rds.DB(ctx, rq.Env), rq.AppId, *rq.GroupId)
+	if req.GroupId != nil {
+		gifts, err := dao.FindByGroupId(ctx, req.AppId, *req.GroupId)
 		if err != nil {
 			return nil, errors.WithMessage(err, "find by group_id")
 		}
@@ -49,7 +50,7 @@ func Query(ctx context.Context, rq *model.QueryReq) (*model.QueryResp, error) {
 		return resp, nil
 	}
 
-	gifts, err := model.FindByAppId(rds.DB(ctx, rq.Env), rq.AppId)
+	gifts, err := dao.FindByAppId(ctx, req.AppId)
 	if err != nil {
 		return nil, errors.WithMessage(err, "find by app_id")
 	}
@@ -61,8 +62,8 @@ func Query(ctx context.Context, rq *model.QueryReq) (*model.QueryResp, error) {
 	return resp, nil
 }
 
-func Add(ctx context.Context, rq *model.AddReq) (*model.AddResp, error) {
-	if err := rq.Validate(); err != nil {
+func Add(ctx context.Context, req *model.AddReq) (*model.AddResp, error) {
+	if err := req.Validate(); err != nil {
 		return nil, errors.WithMessage(err, "validate")
 	}
 
@@ -71,7 +72,7 @@ func Add(ctx context.Context, rq *model.AddReq) (*model.AddResp, error) {
 		return nil, errors.WithMessage(err, "get username")
 	}
 
-	gift, err := rq.ToModel(username)
+	gift, err := req.ToModel(username)
 	if err != nil {
 		return nil, errors.WithMessage(err, "to model")
 	}
@@ -84,8 +85,8 @@ func Add(ctx context.Context, rq *model.AddReq) (*model.AddResp, error) {
 	return resp, nil
 }
 
-func Update(ctx context.Context, rq *model.UpdateReq) error {
-	if err := rq.Validate(); err != nil {
+func Update(ctx context.Context, req *model.UpdateReq) error {
+	if err := req.Validate(); err != nil {
 		return errors.WithMessage(err, "validate")
 	}
 
@@ -97,27 +98,27 @@ func Update(ctx context.Context, rq *model.UpdateReq) error {
 	fields := map[string]interface{}{
 		"updated_by": username,
 	}
-	if rq.Emails != nil {
-		fields["emails"] = rq.Emails
+	if req.Emails != nil {
+		fields["emails"] = req.Emails
 	}
-	if rq.GiftName != nil {
-		fields["gift_name"] = rq.GiftName
+	if req.GiftName != nil {
+		fields["gift_name"] = req.GiftName
 	}
-	if rq.Items != nil {
-		fields["items"] = rq.Items
+	if req.Items != nil {
+		fields["items"] = req.Items
 	}
-	if rq.LotteryRate != nil {
-		fields["lottery_rate"] = rq.LotteryRate
+	if req.LotteryRate != nil {
+		fields["lottery_rate"] = req.LotteryRate
 	}
 
-	if err := model.UpdateById(rds.TestDB(ctx), rq.Id, fields); err != nil {
+	if err := model.InitDAO().SetEnv(consts.Test).UpdateById(ctx, req.Id, fields); err != nil {
 		return errors.WithMessage(err, "update by id")
 	}
 	return nil
 }
 
-func Sync(ctx context.Context, rq *model.SyncReq) error {
-	if err := rq.Validate(); err != nil {
+func Sync(ctx context.Context, req *model.SyncReq) error {
+	if err := req.Validate(); err != nil {
 		return errors.WithMessage(err, "validate")
 	}
 	username, err := util.GetUsername(ctx)
@@ -125,7 +126,7 @@ func Sync(ctx context.Context, rq *model.SyncReq) error {
 		return errors.WithMessage(err, "get username")
 	}
 
-	key := util.MakeKey(rConst.RedisPrefixSync, rq.Id)
+	key := util.MakeKey(rConst.RedisPrefixSync, req.Id)
 	locked, lockV, err := redis.Lock(ctx, key, time.Second*3)
 	if err != nil {
 		return errors.WithMessage(err, "redis lock")
@@ -135,7 +136,7 @@ func Sync(ctx context.Context, rq *model.SyncReq) error {
 		return errors.WithMessage(errs.TooManyRequests, "redis lock failed")
 	}
 
-	gift, err := model.FindById(rds.TestDB(ctx), int(rq.Id))
+	gift, err := model.InitDAO().SetEnv(consts.Test).FindById(ctx, int(req.Id))
 	if err != nil {
 		return errors.WithMessage(err, "find by id")
 	}
@@ -160,13 +161,14 @@ func Sync(ctx context.Context, rq *model.SyncReq) error {
 	return nil
 }
 
-func Delete(ctx context.Context, rq *model.DeleteReq) error {
-	if err := rq.Validate(); err != nil {
+func Delete(ctx context.Context, req *model.DeleteReq) error {
+	if err := req.Validate(); err != nil {
 		return errors.WithMessage(err, "validate")
 	}
 
-	if rq.Env == consts.Test {
-		_, err := model.FindById(rds.ProdDB(ctx), int(rq.Id))
+	dao := model.InitDAO()
+	if req.Env == consts.Test {
+		_, err := dao.SetEnv(consts.Prod).FindById(ctx, int(req.Id))
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return errors.WithMessage(err, "find prod by id")
 		}
@@ -177,12 +179,12 @@ func Delete(ctx context.Context, rq *model.DeleteReq) error {
 		// it's ok that prod record not found
 	}
 
-	gift, err := model.FindById(rds.DB(ctx, rq.Env), int(rq.Id))
+	gift, err := dao.SetEnv(req.Env).FindById(ctx, int(req.Id))
 	if err != nil {
 		return errors.WithMessage(err, "find by id")
 	}
 	if gift.State == consts.StateCreated || gift.State == consts.StateOffline {
-		if err := rds.DB(ctx, rq.Env).Delete(&gift).Error; err != nil {
+		if err := rds.DB(ctx, req.Env).Delete(&gift).Error; err != nil {
 			return errors.WithMessage(err, "delete")
 		}
 		return nil
@@ -191,8 +193,8 @@ func Delete(ctx context.Context, rq *model.DeleteReq) error {
 	return errors.WithMessage(errs.DeleteNotAllowed, "conf in such state can't be deleted")
 }
 
-func Release(ctx context.Context, rq *model.ReleaseReq) error {
-	if err := rq.Validate(); err != nil {
+func Release(ctx context.Context, req *model.ReleaseReq) error {
+	if err := req.Validate(); err != nil {
 		return errors.WithMessage(err, "validate")
 	}
 
@@ -201,10 +203,10 @@ func Release(ctx context.Context, rq *model.ReleaseReq) error {
 		return errors.WithMessage(err, "get username")
 	}
 
-	return rds.DB(ctx, rq.Env).Transaction(func(tx *gorm.DB) error {
+	return rds.DB(ctx, req.Env).Transaction(func(tx *gorm.DB) error {
 		var gift model.Gift
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			First(&gift, rq.Id).Error; err != nil {
+			First(&gift, req.Id).Error; err != nil {
 			return errors.WithMessage(err, "db find")
 		}
 		if gift.State != consts.StateCreated {

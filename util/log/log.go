@@ -15,7 +15,7 @@ import (
 	"github.com/bytedance/sonic"
 )
 
-var logger *log.Logger
+var logger *log.Logger = log.Default()
 
 var Init = sync.OnceFunc(setLogger)
 

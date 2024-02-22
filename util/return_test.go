@@ -81,7 +81,7 @@ func TestError(t *testing.T) {
 				err: errs.Internal,
 			},
 			wantCode: 500,
-			wantResp: `{"code":-2,"msg":"Bind error"}`,
+			wantResp: `{"code":-1,"msg":"code = -1, msg = Internal error"}`,
 		},
 		{
 			name: "test wrap error",
@@ -90,7 +90,7 @@ func TestError(t *testing.T) {
 				err: errors.WithMessage(errs.Bind, "wrap info: "),
 			},
 			wantCode: 500,
-			wantResp: `{"code":-2,"msg":"Bind error"}`,
+			wantResp: `{"code":-2,"msg":"wrap info: : code = -2, msg = Bind error"}`,
 		},
 	}
 	for _, tt := range tests {

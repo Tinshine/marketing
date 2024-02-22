@@ -1,6 +1,7 @@
 package gift
 
 import (
+	"context"
 	"marketing/consts"
 	"marketing/consts/errs"
 	"marketing/consts/resource"
@@ -227,7 +228,7 @@ func (a *UpdateReq) Validate() error {
 		return errors.WithMessage(errs.InvalidParams, "id is required")
 	}
 	if a.LotteryRate != nil {
-		giftType, err := FindGiftTypeById(a.Id)
+		giftType, err := InitDAO().SetEnv(consts.Test).FindGiftTypeById(context.Background(), a.Id)
 		if err != nil {
 			return errors.WithMessage(err, "find gift_type by id")
 		}

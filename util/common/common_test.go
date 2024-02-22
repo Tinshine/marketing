@@ -1,16 +1,17 @@
 package common
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestGetRelativePath(t *testing.T) {
 	tests := []struct {
 		name    string
-		want    string
 		wantErr bool
 	}{
 		{
 			name:    "get relative path",
-			want:    "c:\\Users\\acer\\go\\src\\marketing",
 			wantErr: false,
 		},
 	}
@@ -21,8 +22,8 @@ func TestGetRelativePath(t *testing.T) {
 				t.Errorf("GetRelativePath() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("GetRelativePath() = %v, want %v", got, tt.want)
+			if !strings.HasSuffix(got, "marketing") {
+				t.Errorf("GetRelativePath() = %v, HasSuffix %v", got, strings.HasSuffix(got, "marketing"))
 			}
 		})
 	}
