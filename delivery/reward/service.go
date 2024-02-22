@@ -39,7 +39,8 @@ func parseParams(txId string, params *trM.Params) (*dM.RewardReq, error) {
 }
 
 func tryOrder(ctx context.Context, req *dM.RewardReq) error {
-	order, err := dM.FindOrder(ctx, req)
+	dao := dM.InitDAO().SetEnv(req.Ev)
+	order, err := dao.FindOrder(ctx, req.TxId, req.UserId, req.GroupId)
 	if err != nil && err != errs.OrderNotFound {
 		return errors.WithMessage(err, "find order")
 	}
@@ -49,7 +50,7 @@ func tryOrder(ctx context.Context, req *dM.RewardReq) error {
 		return nil
 	}
 	// create a new order and update user's limit
-	order, err = dM.CreateOrder(ctx, req, consts.StateTry)
+	order, err = dao.CreateOrder(ctx, req.TxId, req.UserId, req.AppId, req.GroupId, consts.StateTry)
 	if err != nil {
 		return errors.WithMessage(err, "create order")
 	}
@@ -65,14 +66,15 @@ func tryOrder(ctx context.Context, req *dM.RewardReq) error {
 }
 
 func cancelOrder(ctx context.Context, req *dM.RewardReq) error {
-	order, err := dM.FindOrder(ctx, req)
+	dao := dM.InitDAO().SetEnv(req.Ev)
+	order, err := dao.FindOrder(ctx, req.TxId, req.UserId, req.GroupId)
 	if err != nil && err != errs.OrderNotFound {
 		return errors.WithMessage(err, "find order")
 	}
 	if err == errs.OrderNotFound {
 		// empty cancel problem
 		log.Error("Cancel.Empty.TxRecord", errs.TransactionEmptyCancel, "req", req)
-		_, err = dM.CreateOrder(ctx, req, consts.StateCancel)
+		_, err = dao.CreateOrder(ctx, req.TxId, req.UserId, req.AppId, req.GroupId, consts.StateCancel)
 		if err != nil {
 			return errors.WithMessage(err, "create cancel order")
 		}
@@ -80,22 +82,22 @@ func cancelOrder(ctx context.Context, req *dM.RewardReq) error {
 		return nil
 	}
 
-	if err := dM.UpdateOrder(ctx,
-		order.Id, req.Ev, consts.StateTry, consts.StateCancel); err != nil {
+	if err := dao.UpdateOrder(ctx, order.Id, consts.StateTry, consts.StateCancel); err != nil {
 		return errors.WithMessage(err, "update order")
 	}
 	return nil
 }
 
 func confirmOrder(ctx context.Context, req *dM.RewardReq) error {
-	order, err := dM.FindOrder(ctx, req)
+	dao := dM.InitDAO().SetEnv(req.Ev)
+	order, err := dao.FindOrder(ctx, req.TxId, req.UserId, req.GroupId)
 	if err != nil && err != errs.OrderNotFound {
 		return errors.WithMessage(err, "find order")
 	}
 	if err == errs.OrderNotFound {
 		// empty confirm problem
 		log.Error("Confirm.Empty.TxRecord", errs.TransactionEmptyConfirm, "req", req)
-		_, err = dM.CreateOrder(ctx, req, consts.StateConfirm)
+		_, err = dao.CreateOrder(ctx, req.TxId, req.UserId, req.AppId, req.GroupId, consts.StateConfirm)
 		if err != nil {
 			return errors.WithMessage(err, "create confirm order")
 		}
@@ -103,8 +105,8 @@ func confirmOrder(ctx context.Context, req *dM.RewardReq) error {
 		return nil
 	}
 
-	if err := dM.UpdateOrder(ctx,
-		order.Id, req.Ev, consts.StateTry, consts.StateConfirm); err != nil {
+	if err := dao.UpdateOrder(ctx,
+		order.Id, consts.StateTry, consts.StateConfirm); err != nil {
 		return errors.WithMessage(err, "update order")
 	}
 	return nil

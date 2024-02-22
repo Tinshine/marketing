@@ -228,11 +228,11 @@ func (a *UpdateReq) Validate() error {
 		return errors.WithMessage(errs.InvalidParams, "id is required")
 	}
 	if a.LotteryRate != nil {
-		giftType, err := InitDAO().SetEnv(consts.Test).FindGiftTypeById(context.Background(), a.Id)
+		gift, err := InitDAO().SetEnv(consts.Test).FindById(context.Background(), a.Id)
 		if err != nil {
 			return errors.WithMessage(err, "find gift_type by id")
 		}
-		if giftType != resource.Lottery {
+		if gift.GiftType != resource.Lottery {
 			return errors.WithMessage(errs.InvalidParams, "only lottery gift can update lottery_rate")
 		}
 	}

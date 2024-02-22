@@ -2,14 +2,15 @@ package gift
 
 import (
 	"context"
-	"fmt"
 	"marketing/consts"
-	"marketing/consts/resource"
 	"reflect"
+
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 type mockDAO struct {
-	val any
+	gifts map[uint]*Gift
 }
 
 func (dao *mockDAO) SetEnv(env consts.Env) DAO {
@@ -17,44 +18,47 @@ func (dao *mockDAO) SetEnv(env consts.Env) DAO {
 }
 
 func (dao *mockDAO) FindById(ctx context.Context, id int) (*Gift, error) {
-	return dao.val.(*Gift), nil
-}
-
-func (dao *mockDAO) FindGiftTypeById(ctx context.Context, id int) (resource.GiftType, error) {
-	return dao.val.(resource.GiftType), nil
+	for i := range dao.gifts {
+		if i == uint(id) {
+			return dao.gifts[i], nil
+		}
+	}
+	return nil, errors.WithMessage(gorm.ErrRecordNotFound, "db first")
 }
 
 func (dao *mockDAO) FindByAppId(ctx context.Context, appId uint) ([]*Gift, error) {
-	return dao.val.([]*Gift), nil
+	var gifts []*Gift
+	for i := range dao.gifts {
+		if i == appId {
+			gifts = append(gifts, dao.gifts[i])
+		}
+	}
+	return gifts, nil
 }
 
 func (dao *mockDAO) FindByGroupId(ctx context.Context, appId, groupId uint) ([]*Gift, error) {
-	return dao.val.([]*Gift), nil
+	var gifts []*Gift
+	for i := range dao.gifts {
+		if i == appId && i == groupId {
+			gifts = append(gifts, dao.gifts[i])
+		}
+	}
+	return gifts, nil
 }
 
 func (dao *mockDAO) UpdateById(ctx context.Context, id int, fields map[string]interface{}) error {
-	g := dao.val.(*Gift)
-	v := reflect.ValueOf(g).Elem()
-
-	for k, val := range fields {
-		field := v.FieldByName(k)
-		if !field.IsValid() {
-			return fmt.Errorf("no such field: %s in struct", k)
+	var g *Gift
+	for i := range dao.gifts {
+		if i == uint(id) {
+			g = dao.gifts[i]
 		}
-
-		if !field.CanSet() {
-			return fmt.Errorf("cannot set field: %s in struct", k)
-		}
-
-		fieldType := field.Type()
-		valType := reflect.ValueOf(val).Type()
-
-		if fieldType != valType {
-			return fmt.Errorf("provided value type didn't match obj field type")
-		}
-
-		field.Set(reflect.ValueOf(val))
 	}
-	dao.val = g
+	if g == nil {
+		return errors.WithMessage(gorm.ErrRecordNotFound, "db first")
+	}
+	v := reflect.ValueOf(g).Elem()
+	for key, value := range fields {
+		v.FieldByName(key).Set(reflect.ValueOf(value))
+	}
 	return nil
 }

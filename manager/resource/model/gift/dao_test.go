@@ -1,7 +1,7 @@
 package gift
 
 import (
-	"os"
+	"marketing/util"
 	"reflect"
 	"testing"
 )
@@ -13,16 +13,18 @@ func TestInitDAO(t *testing.T) {
 	}{
 		{
 			name: func() string {
-				os.Setenv("unit_test", "0")
+				util.UnsetUnitTestMode()
 				return "prod env"
 			},
 			want: &rdsDAO{},
 		}, {
 			name: func() string {
-				os.Setenv("unit_test", "1")
+				util.SetUnitTestMode()
 				return "test env"
 			},
-			want: &mockDAO{},
+			want: &mockDAO{
+				gifts: map[uint]*Gift{},
+			},
 		},
 	}
 	for _, tt := range tests {

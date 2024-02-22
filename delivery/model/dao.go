@@ -5,16 +5,40 @@ import (
 	"marketing/consts"
 	"marketing/consts/errs"
 	"marketing/database/rds"
+	"marketing/util"
 	"marketing/util/idgen"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
-func FindOrder(c context.Context, r *RewardReq) (*Order, error) {
+type DAO interface {
+	SetEnv(env consts.Env) DAO
+	FindOrder(c context.Context, txId, userId string, groupId uint) (*Order, error)
+	CreateOrder(c context.Context, txId, userId string, appId, groupId uint, state consts.TxState) (*Order, error)
+	UpdateOrder(c context.Context, id uint, src, dest consts.TxState) error
+}
+
+type rdsDAO struct {
+	env consts.Env
+}
+
+func InitDAO() DAO {
+	if util.IsUnitTest() {
+		return &mockDAO{}
+	}
+	return &rdsDAO{}
+}
+
+func (dao *rdsDAO) SetEnv(env consts.Env) DAO {
+	dao.env = env
+	return dao
+}
+
+func (dao *rdsDAO) FindOrder(c context.Context, txId, userId string, groupId uint) (*Order, error) {
 	var order Order
-	if err := rds.DB(c, r.Ev).
-		Where("tx_id = ? and user_id = ? and group_id = ?", r.TxId, r.UserId, r.GroupId).
+	if err := rds.DB(c, dao.env).
+		Where("tx_id = ? and user_id = ? and group_id = ?", txId, userId, groupId).
 		First(&order).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return nil, errors.WithMessage(errs.Internal, err.Error())
@@ -24,26 +48,35 @@ func FindOrder(c context.Context, r *RewardReq) (*Order, error) {
 	return &order, nil
 }
 
-func CreateOrder(c context.Context, req *RewardReq, state consts.TxState) (*Order, error) {
+func (dao *rdsDAO) CreateOrder(c context.Context,
+	txId, userId string, appId, groupId uint, state consts.TxState) (*Order, error) {
+	order, err := reqToModel(c, txId, userId, appId, groupId, state)
+	if err != nil {
+		return nil, errors.WithMessage(err, "req to model")
+	}
+	if err := rds.DB(c, dao.env).Create(order).Error; err != nil {
+		return nil, errors.WithMessage(errs.Internal, err.Error())
+	}
+	return order, nil
+}
+
+func reqToModel(c context.Context, txId, userId string, appId, groupId uint, state consts.TxState) (*Order, error) {
 	orderId, err := idgen.Gen(c)
 	if err != nil {
 		return nil, errors.WithMessage(err, "idgen gen")
 	}
 	order := Order{}
-	order.AppId = req.AppId
-	order.GroupId = req.GroupId
-	order.UserId = req.UserId
-	order.TxId = req.TxId
+	order.AppId = appId
+	order.GroupId = groupId
+	order.UserId = userId
+	order.TxId = txId
 	order.OrderId = orderId
 	order.TxState = consts.StateTry
-	if err := rds.DB(c, req.Ev).Create(&order).Error; err != nil {
-		return nil, errors.WithMessage(errs.Internal, err.Error())
-	}
 	return &order, nil
 }
 
-func UpdateOrder(c context.Context, id uint, ev consts.Env, src, dest consts.TxState) error {
-	return rds.DB(c, ev).Model(&Order{}).
+func (dao *rdsDAO) UpdateOrder(c context.Context, id uint, src, dest consts.TxState) error {
+	return rds.DB(c, dao.env).Model(&Order{}).
 		Where("id = ? and tx_state = ?", id, src).
 		UpdateColumn("tx_state", dest).Error
 }

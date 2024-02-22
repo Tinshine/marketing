@@ -1,6 +1,8 @@
 package common
 
-import "time"
+import (
+	"time"
+)
 
 type Model struct {
 	Id        uint      `gorm:"id"`

@@ -3,9 +3,8 @@ package gift
 import (
 	"context"
 	"marketing/consts"
-	"marketing/consts/resource"
 	"marketing/database/rds"
-	"os"
+	"marketing/util"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -15,15 +14,14 @@ import (
 type DAO interface {
 	SetEnv(env consts.Env) DAO
 	FindById(ctx context.Context, id int) (*Gift, error)
-	FindGiftTypeById(ctx context.Context, id int) (resource.GiftType, error)
 	FindByAppId(ctx context.Context, appId uint) ([]*Gift, error)
 	FindByGroupId(ctx context.Context, appId, groupId uint) ([]*Gift, error)
 	UpdateById(ctx context.Context, id int, fields map[string]interface{}) error
 }
 
 func InitDAO() DAO {
-	if os.Getenv("unit_test") == "1" {
-		return &mockDAO{}
+	if util.IsUnitTest() {
+		return &mockDAO{map[uint]*Gift{}}
 	}
 	return &rdsDAO{}
 }
@@ -43,15 +41,6 @@ func (dao *rdsDAO) FindById(ctx context.Context, id int) (*Gift, error) {
 		return nil, errors.WithMessage(err, "db first")
 	}
 	return &gift, nil
-}
-
-func (dao *rdsDAO) FindGiftTypeById(ctx context.Context, id int) (resource.GiftType, error) {
-	var gift Gift
-	if err := rds.DB(ctx, dao.env).Select("gift_type").First(&gift, id).Error; err != nil {
-		return -1, errors.WithMessage(err, "db first")
-	}
-	giftType := gift.GiftType
-	return giftType, nil
 }
 
 func (dao *rdsDAO) FindByAppId(ctx context.Context, appId uint) ([]*Gift, error) {
@@ -77,7 +66,7 @@ func (dao *rdsDAO) UpdateById(ctx context.Context, id int, fields map[string]int
 		var gift Gift
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			First(&gift, id).Error; err != nil {
-			return errors.WithMessage(err, "db find")
+			return errors.WithMessage(err, "db first")
 		}
 		return tx.Model(&gift).Updates(fields).Error
 	})

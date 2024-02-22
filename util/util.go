@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"marketing/consts"
 	"marketing/consts/errs"
+	"os"
 	"strings"
 )
 
@@ -31,4 +32,16 @@ func MakeKey(items ...interface{}) string {
 	}
 	key := sb.String()
 	return key[:len(key)-1]
+}
+
+func IsUnitTest() bool {
+	return os.Getenv("unit_test") == "1"
+}
+
+func SetUnitTestMode() {
+	os.Setenv("unit_test", "1")
+}
+
+func UnsetUnitTestMode() {
+	os.Unsetenv("unit_test")
 }

@@ -5,6 +5,7 @@ go 1.21.5
 require (
 	github.com/bytedance/sonic v1.8.1
 	github.com/cloudwego/hertz v0.8.0
+	github.com/google/uuid v1.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.4.0
 	github.com/stretchr/testify v1.8.1
@@ -23,7 +24,6 @@ require (
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/golang/protobuf v1.5.0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/henrylee2cn/ameda v1.4.10 // indirect
 	github.com/henrylee2cn/goutil v0.0.0-20210127050712-89660552f6f8 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
