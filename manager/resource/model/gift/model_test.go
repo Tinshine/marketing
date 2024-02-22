@@ -1,6 +1,7 @@
 package gift
 
 import (
+	"marketing/consts"
 	"marketing/consts/resource"
 	"reflect"
 	"testing"
@@ -18,6 +19,12 @@ func TestQueryReq_Validate(t *testing.T) {
 				Env: -1,
 			},
 			wantErr: true,
+		}, {
+			name: "normal env",
+			q: &QueryReq{
+				Env: consts.Test,
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
