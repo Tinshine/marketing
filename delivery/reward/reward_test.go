@@ -1,143 +1,108 @@
 package reward
 
-// func TestRewardConfirm(t *testing.T) {
-// 	util.SetUnitTestMode()
-// 	type args struct {
-// 		ctx    context.Context
-// 		params *model.Params
-// 	}
+import (
+	"context"
+	"marketing/consts"
+	trM "marketing/engine/transcation/model"
+	"marketing/user"
+	"marketing/util"
+	"reflect"
+	"testing"
+)
 
-// 	tests := []struct {
-// 		name    string
-// 		args    args
-// 		wantErr bool
-// 	}{
-// 		{
-// 			name: "correct params",
-// 			args: args{
-// 				ctx: context.Background(),
-// 				params: &model.Params{
-// 					Input: map[string]interface{}{
-// 						"quota_id": uint(1),
-// 						"group_id": uint(1),
-// 					},
-// 					User: &user.SdkUser{
-// 						Id: "tinshine",
-// 					},
-// 					Ev:    consts.Test,
-// 					AppId: 100,
-// 				},
-// 			},
-// 			wantErr: false,
-// 		}, {
-// 			name: "missing quota_id in Input",
-// 			args: args{
-// 				ctx: context.Background(),
-// 				params: &model.Params{
-// 					Input: map[string]interface{}{
-// 						"group_id": uint(1),
-// 					},
-// 					User: &user.SdkUser{
-// 						Id: "tinshine",
-// 					},
-// 					Ev:    consts.Test,
-// 					AppId: 100,
-// 				},
-// 			},
-// 			wantErr: true,
-// 		}, {
-// 			name: "missing group_id in Input",
-// 			args: args{
-// 				ctx: context.Background(),
-// 				params: &model.Params{
-// 					Input: map[string]interface{}{
-// 						"quota_id": uint(1),
-// 					},
-// 					User: &user.SdkUser{
-// 						Id: "tinshine",
-// 					},
-// 					Ev:    consts.Test,
-// 					AppId: 100,
-// 				},
-// 			},
-// 			wantErr: true,
-// 		},
-// 	}
-
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			txId, err := idgen.Gen(tt.args.ctx)
-// 			if err != nil {
-// 				t.Errorf("error generating, err %v", err)
-// 				return
-// 			}
-// 			r := NewReward(txId)
-// 			_, err = r.Try(tt.args.ctx, tt.args.params)
-// 			if (err != nil) != tt.wantErr {
-// 				t.Errorf("Try() error = %v", err)
-// 				return
-// 			}
-// 			_, err = r.Confirm(tt.args.ctx, tt.args.params)
-// 			if (err != nil) != tt.wantErr {
-// 				t.Errorf("Confirm() error = %v", err)
-// 				return
-// 			}
-// 		})
-// 	}
-// }
-
-// func TestTryCancel(t *testing.T) {
-// 	conf.Init()
-// 	log.Init()
-// 	rds.Init()
-// 	type args struct {
-// 		ctx    context.Context
-// 		params *model.Params
-// 	}
-
-// 	tests := []struct {
-// 		name    string
-// 		args    args
-// 		wantErr bool
-// 	}{
-// 		{
-// 			name: "correct params",
-// 			args: args{
-// 				ctx: context.Background(),
-// 				params: &model.Params{
-// 					Input: map[string]interface{}{
-// 						"quota_id": uint(1),
-// 						"group_id": uint(2),
-// 					},
-// 					User: &user.SdkUser{
-// 						Id: "tinshine",
-// 					},
-// 					Ev:    consts.Test,
-// 					AppId: 100,
-// 				},
-// 			},
-// 			wantErr: false,
-// 		},
-// 	}
-
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			txId, err := idgen.Gen(tt.args.ctx)
-// 			if err != nil {
-// 				t.Errorf("error generating, err %v", err)
-// 				return
-// 			}
-// 			r := NewReward(txId)
-// 			_, err = r.Try(tt.args.ctx, tt.args.params)
-// 			if (err != nil) != tt.wantErr {
-// 				t.Errorf("Try() error = %v", err)
-// 				return
-// 			}
-// 			_, err = r.Cancel(tt.args.ctx, tt.args.params)
-// 			if (err != nil) != tt.wantErr {
-// 				t.Errorf("Confirm() error = %v", err)
-// 				return
-// 			}
-// 		})
-// 	}
-// }
+func Test_reward_Try(t *testing.T) {
+	util.SetUnitTestMode()
+	var n1 uint = 1
+	var n3 uint = 3
+	type args struct {
+		ctx    context.Context
+		params *trM.Params
+	}
+	tests := []struct {
+		name    string
+		r       *reward
+		args    args
+		want    *trM.Resp
+		wantErr bool
+	}{
+		{
+			name: "normal try",
+			r:    &reward{TxId: "3"},
+			args: args{
+				ctx: context.Background(),
+				params: &trM.Params{
+					Input: map[string]interface{}{
+						"quota_id": n3,
+						"group_id": n3,
+					},
+					User:  &user.SdkUser{Id: "3"},
+					Ev:    consts.Test,
+					AppId: 3,
+				},
+			},
+			want:    &trM.Resp{},
+			wantErr: false,
+		}, {
+			name: "try without quota_id",
+			r:    &reward{TxId: "3"},
+			args: args{
+				ctx: context.Background(),
+				params: &trM.Params{
+					Input: map[string]interface{}{
+						"group_id": n3,
+					},
+					User:  &user.SdkUser{Id: "3"},
+					Ev:    consts.Test,
+					AppId: 3,
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		}, {
+			name: "try without group_id",
+			r:    &reward{TxId: "3"},
+			args: args{
+				ctx: context.Background(),
+				params: &trM.Params{
+					Input: map[string]interface{}{
+						"quota_id": n3,
+					},
+					User:  &user.SdkUser{Id: "3"},
+					Ev:    consts.Test,
+					AppId: 3,
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		}, {
+			name: "duplicate try",
+			r:    &reward{TxId: "1"},
+			args: args{
+				ctx: context.Background(),
+				params: &trM.Params{
+					Input: map[string]interface{}{
+						"quota_id": n1,
+						"group_id": n1,
+					},
+					User:  &user.SdkUser{Id: "1"},
+					Ev:    consts.Test,
+					AppId: 1,
+				},
+			},
+			want:    &trM.Resp{},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.r.Try(tt.args.ctx, tt.args.params)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("reward.Try() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("reward.Try() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
