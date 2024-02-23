@@ -14,8 +14,9 @@ func Query(ctx context.Context, rq *model.QueryReq) (*model.QueryResp, error) {
 	resp := &model.QueryResp{}
 	resp.Data = make([]*model.RespModel, 0, 1)
 
+	dao := model.InitDAO()
 	if rq.Id != nil {
-		item, err := model.FindById(ctx, *rq.Id)
+		item, err := dao.FindById(ctx, *rq.Id)
 		if err != nil {
 			return nil, errors.WithMessage(err, "model FindById")
 		}
@@ -28,7 +29,7 @@ func Query(ctx context.Context, rq *model.QueryReq) (*model.QueryResp, error) {
 		return nil, errors.WithMessage(errs.InvalidParams, "app_id is required")
 	}
 	if rq.ItemId == nil {
-		item, err := model.FindByItemId(ctx, rq.AppId, *rq.ItemId)
+		item, err := dao.FindByItemId(ctx, rq.AppId, *rq.ItemId)
 		if err != nil {
 			return nil, errors.WithMessage(err, "model FindByItemId")
 		}
@@ -37,7 +38,7 @@ func Query(ctx context.Context, rq *model.QueryReq) (*model.QueryResp, error) {
 		return resp, nil
 	}
 
-	items, err := model.FindByAppId(ctx, rq.AppId)
+	items, err := dao.FindByAppId(ctx, rq.AppId)
 	if err != nil {
 		return nil, errors.WithMessage(err, "model FindByAppId")
 	}
@@ -57,7 +58,7 @@ func Add(ctx context.Context, rq *model.AddReq) (*model.AddResp, error) {
 		return nil, errors.WithMessage(err, "util GetUsername")
 	}
 
-	item, err := model.FirstOrInit(ctx, rq, username)
+	item, err := model.InitDAO().FirstOrInit(ctx, rq, username)
 	if err != nil {
 		return nil, errors.WithMessage(err, "model FirstOrInit")
 	}
@@ -71,7 +72,7 @@ func Delete(ctx context.Context, rq *model.DeleteReq) error {
 		return errors.WithMessage(err, "model Validate")
 	}
 
-	err := model.DeleteById(ctx, rq.Id)
+	err := model.InitDAO().DeleteById(ctx, rq.Id)
 	if err != nil {
 		return errors.WithMessage(err, "model DeleteById")
 	}
@@ -87,7 +88,7 @@ func Update(ctx context.Context, rq *model.UpdateReq) error {
 		return errors.WithMessage(err, "util GetUsername")
 	}
 
-	if err = model.UpdateById(ctx, rq.Id, map[string]interface{}{
+	if err = model.InitDAO().UpdateById(ctx, rq.Id, map[string]interface{}{
 		"descr":      rq.Descr,
 		"updated_by": username,
 		"updated_at": time.Now().Unix(),

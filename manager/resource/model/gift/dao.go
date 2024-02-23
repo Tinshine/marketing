@@ -21,7 +21,7 @@ type DAO interface {
 
 func InitDAO() DAO {
 	if util.IsUnitTest() {
-		return &mockDAO{map[uint]*Gift{}}
+		return &mockDAO{}
 	}
 	return &rdsDAO{}
 }
