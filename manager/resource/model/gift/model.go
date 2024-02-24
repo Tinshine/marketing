@@ -174,6 +174,9 @@ func (a *AddReq) Validate() error {
 	if a.GiftType == resource.Lottery && a.LotteryRate == "" {
 		return errors.WithMessage(errs.InvalidParams, "lottery gift's lottery_rate is required")
 	}
+	if a.GroupId == 0 {
+		return errors.WithMessage(errs.InvalidParams, "group_id is required")
+	}
 	if len(a.GiftName) == 0 || len(a.GiftName) > 50 {
 		return errors.WithMessage(errs.InvalidParams, "gift_name length invalid")
 	}
