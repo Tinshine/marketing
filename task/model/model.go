@@ -2,14 +2,13 @@ package model
 
 import (
 	"errors"
+	"marketing/common"
 	"marketing/consts"
 	"marketing/consts/engine"
-
-	"gorm.io/gorm"
 )
 
 type Task struct {
-	gorm.Model
+	common.Model
 	Name        string        `gorm:"column:"name"`
 	Type        engine.TrType `gorm:"column:"type"`
 	Domain      string        `gorm:"column:"domain"`

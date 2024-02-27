@@ -3,7 +3,6 @@ package transaction
 import (
 	"context"
 	"marketing/consts"
-	"marketing/database/rds"
 	"marketing/engine/transcation/model"
 	"marketing/engine/transcation/tr"
 	tsM "marketing/task/model"
@@ -26,8 +25,7 @@ func NewTx(ev consts.Env) *tx {
 	}
 }
 
-func (t *tx) newTransaction(ctx context.Context, tasks []*tsM.Task) error {
-
+func (t *tx) create(ctx context.Context, tasks []*tsM.Task) error {
 	txId, err := idgen.Gen(ctx)
 	if err != nil {
 		return errors.WithMessage(err, "idgen gen")
@@ -36,18 +34,18 @@ func (t *tx) newTransaction(ctx context.Context, tasks []*tsM.Task) error {
 	for _, tsk := range tasks {
 		ts = append(ts, &model.Transaction{
 			State:  consts.StateTry,
-			TaskId: tsk.ID,
+			TaskId: tsk.Id,
 			TxId:   txId,
 		})
 	}
-	if err := rds.DB(ctx, t.Ev).Create(&ts).Error; err != nil {
+	if err := model.InitDAO().SetEnv(t.Ev).CreateTx(ctx, ts); err != nil {
 		return errors.WithMessage(err, "create")
 	}
 
 	// make map: task_id -> Task
 	trMap := make(map[uint]*tsM.Task, len(tasks))
 	for _, tsk := range tasks {
-		trMap[tsk.ID] = tsk
+		trMap[tsk.Id] = tsk
 	}
 	t.Trs = make([]model.T, 0, len(trMap))
 	for _, ti := range ts {
@@ -67,7 +65,7 @@ func (t *tx) Execute(ctx context.Context, tasks []*tsM.Task, params *model.Param
 		}
 	}()
 
-	if err = t.newTransaction(ctx, tasks); err != nil {
+	if err = t.create(ctx, tasks); err != nil {
 		return errors.WithMessage(err, "new transaction")
 	}
 
@@ -96,7 +94,7 @@ func (t *tx) Commit(ctx context.Context, params *model.Params) {
 			log.Info("Commit.confirm.success", "trId", t.Trs[i].GetTxId(), "resp", resp)
 			// after all have been confirmed, update db,
 			// if confirm success, but update failed, retry will be ok.
-			if err := model.ConfirmTx(ctx, t.Trs[i].GetTxId(), t.Ev); err != nil {
+			if err := model.InitDAO().SetEnv(t.Ev).ConfirmTx(ctx, t.Trs[i].GetTxId()); err != nil {
 				log.Error("Commit.confirmTx", err, "trId", t.Trs[i].GetTxId())
 				return
 			}
@@ -129,7 +127,7 @@ func (t *tx) Rollback(ctx context.Context, params *model.Params) {
 			log.Info("Rollback.Cancel.Success", "tx", t, "resp", resp)
 			// after all have been cancelled success, update db,
 			// if cancellation success, but update failed, retry with be ok.
-			if err = model.CancelTx(ctx, t.Trs[i].GetTxId(), t.Ev); err != nil {
+			if err = model.InitDAO().SetEnv(t.Ev).CancelTx(ctx, t.Trs[i].GetTxId()); err != nil {
 				log.Error("Rollback.cancelTx", err, "trId", t.Trs[i].GetTxId())
 				return
 			}

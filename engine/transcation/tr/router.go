@@ -15,7 +15,7 @@ func NewTr(task *tskM.Task, txId string) model.T {
 	case engine.Tr_RPC:
 		return GetRPCTask(task.Handler)
 	case engine.Tr_Local:
-		switch task.ID {
+		switch task.Id {
 		case engine.TaskId_DeductQuota:
 			return &deductQuota{}
 		case engine.TaskId_Reward:

@@ -5,6 +5,7 @@ import (
 	"marketing/consts"
 	"marketing/consts/errs"
 	"marketing/database/rds"
+	"marketing/util"
 	"marketing/util/log"
 
 	"github.com/pkg/errors"
@@ -12,8 +13,35 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func CancelTx(ctx context.Context, trId string, ev consts.Env) error {
-	return rds.DB(ctx, ev).Transaction(func(tx *gorm.DB) error {
+type DAO interface {
+	SetEnv(env consts.Env) DAO
+	CreateTx(ctx context.Context, records []*Transaction) error
+	CancelTx(ctx context.Context, trId string) error
+	ConfirmTx(ctx context.Context, trId string) error
+}
+
+func InitDAO() DAO {
+	if util.IsUnitTest() {
+		return initMockDAO()
+	}
+	return &rdsDAO{}
+}
+
+type rdsDAO struct {
+	env consts.Env
+}
+
+func (dao *rdsDAO) SetEnv(env consts.Env) DAO {
+	dao.env = env
+	return dao
+}
+
+func (dao *rdsDAO) CreateTx(ctx context.Context, records []*Transaction) error {
+	return rds.DB(ctx, dao.env).Create(&records).Error
+}
+
+func (dao *rdsDAO) CancelTx(ctx context.Context, trId string) error {
+	return rds.DB(ctx, dao.env).Transaction(func(tx *gorm.DB) error {
 		var r Transaction
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			First(&r, trId).Error; err != nil {
@@ -32,8 +60,8 @@ func CancelTx(ctx context.Context, trId string, ev consts.Env) error {
 	})
 }
 
-func ConfirmTx(ctx context.Context, trId string, ev consts.Env) error {
-	return rds.DB(ctx, ev).Transaction(func(tx *gorm.DB) error {
+func (dao *rdsDAO) ConfirmTx(ctx context.Context, trId string) error {
+	return rds.DB(ctx, dao.env).Transaction(func(tx *gorm.DB) error {
 		var r Transaction
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			First(&r, trId).Error; err != nil {
