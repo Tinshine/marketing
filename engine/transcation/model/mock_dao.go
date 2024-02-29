@@ -11,7 +11,9 @@ type mockDAO struct {
 }
 
 func initMockDAO() *mockDAO {
-	return &mockDAO{}
+	return &mockDAO{
+		trs: make(map[uint]*Transaction),
+	}
 }
 
 func (dao *mockDAO) SetEnv(env consts.Env) DAO {

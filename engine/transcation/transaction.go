@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"context"
+	"fmt"
 	"marketing/consts"
 	"marketing/engine/transcation/model"
 	"marketing/engine/transcation/tr"
@@ -38,7 +39,7 @@ func (t *tx) create(ctx context.Context, tasks []*tsM.Task) error {
 			TxId:   txId,
 		})
 	}
-	if err := model.InitDAO().SetEnv(t.Ev).CreateTx(ctx, ts); err != nil {
+	if err = model.InitDAO().SetEnv(t.Ev).CreateTx(ctx, ts); err != nil {
 		return errors.WithMessage(err, "create")
 	}
 
@@ -58,11 +59,15 @@ func (t *tx) create(ctx context.Context, tasks []*tsM.Task) error {
 func (t *tx) Execute(ctx context.Context, tasks []*tsM.Task, params *model.Params) error {
 	var err error
 	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic: %v", r)
+			return
+		}
 		if err != nil {
 			t.Rollback(ctx, params)
-		} else {
-			t.Commit(ctx, params)
+			return
 		}
+		t.Commit(ctx, params)
 	}()
 
 	if err = t.create(ctx, tasks); err != nil {
