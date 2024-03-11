@@ -28,7 +28,7 @@ func Query(ctx context.Context, rq *model.QueryReq) (*model.QueryResp, error) {
 	if rq.AppId == 0 {
 		return nil, errors.WithMessage(errs.InvalidParams, "app_id is required")
 	}
-	if rq.ItemId == nil {
+	if rq.ItemId != nil {
 		item, err := dao.FindByItemId(ctx, rq.AppId, *rq.ItemId)
 		if err != nil {
 			return nil, errors.WithMessage(err, "model FindByItemId")

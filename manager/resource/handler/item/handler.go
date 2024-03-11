@@ -42,6 +42,14 @@ func Add(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	var err error
+	req.CreatedBy, err = util.GetUsername(c)
+	if err != nil {
+		log.Error("Add.GetUsername", err)
+		util.Error(ctx, err)
+		return
+	}
+
 	resp, err := service.Add(c, req)
 	if err != nil {
 		log.Error("Add.service.Add", err, "req", req)
